@@ -1,4 +1,5 @@
----
+<!--
+```yaml
 project: Obsidian Rust MCP
 description: High-performance MCP server for Obsidian knowledge base management
 language: Rust
@@ -19,7 +20,9 @@ keywords:
   - High Performance
 repository: https://github.com/fromsko/obsidian-rust-mcp
 documentation: https://github.com/fromsko/obsidian-rust-mcp/blob/main/README.md
----
+```
+-->
+
 
 # Obsidian Rust MCP
 

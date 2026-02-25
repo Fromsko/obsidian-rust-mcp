@@ -1,4 +1,5 @@
----
+<!--
+```yaml
 project: Obsidian Rust MCP
 description: 基于 Rust 构建的高性能 Obsidian 知识库 MCP 服务器
 language: Rust
@@ -19,7 +20,9 @@ keywords:
   - 高性能
 repository: https://github.com/fromsko/obsidian-rust-mcp
 documentation: https://github.com/fromsko/obsidian-rust-mcp/blob/main/README_CN.md
----
+```
+-->
+
 
 # Obsidian Rust MCP
 
