@@ -111,7 +111,24 @@ $env:OBSIDIAN_VAULT_ROOT="D:\notes\Fromsko"
 const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 ```
 
-**注意**：环境变量优先级高于硬编码路径。
+### 选项 3：MCP 客户端配置（推荐用于 MCP 客户端）
+在您的 MCP 客户端配置中直接设置知识库路径：
+
+```json
+{
+  "fromsko-note": {
+    "command": "/path/to/obsidian-mcp",
+    "disabled": false,
+    "env": {
+      "OBSIDIAN_VAULT_ROOT": "/path/to/your/vault"
+    }
+  }
+}
+```
+
+将 `/path/to/obsidian-mcp` 替换为编译后的二进制文件实际路径，将 `/path/to/your/vault` 替换为您的 Obsidian 知识库路径。
+
+**注意**：当与 Claude Desktop、Cursor 或其他 MCP 兼容工具一起使用时，这是推荐的方法。
 
 ## 有效目录
 

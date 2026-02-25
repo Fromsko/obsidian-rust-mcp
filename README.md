@@ -111,7 +111,24 @@ Edit the `VAULT_ROOT` constant in `src/main.rs`:
 const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 ```
 
-**Note**: The environment variable takes priority over the hardcoded path.
+### Option 3: MCP Client Configuration (Recommended for MCP clients)
+Configure the vault path directly in your MCP client configuration:
+
+```json
+{
+  "fromsko-note": {
+    "command": "/path/to/obsidian-mcp",
+    "disabled": false,
+    "env": {
+      "OBSIDIAN_VAULT_ROOT": "/path/to/your/vault"
+    }
+  }
+}
+```
+
+Replace `/path/to/obsidian-mcp` with the actual path to your compiled binary, and `/path/to/your/vault` with your Obsidian vault path.
+
+**Note**: This is the recommended approach when using this MCP server with clients like Claude Desktop, Cursor, or other MCP-compatible tools.
 
 ## Valid Directories
 
