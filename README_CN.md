@@ -2,7 +2,7 @@
 project: Obsidian Rust MCP
 description: 基于 Rust 构建的高性能 Obsidian 知识库 MCP 服务器
 language: Rust
-version: 0.1.1
+version: 0.1.2
 author: Fromsko
 email: fromsko@example.com
 license: MIT
