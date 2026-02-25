@@ -135,32 +135,35 @@ jobs:
           name: v${{ needs.check-version.outputs.version }}
           body: |
             ## 📦 Obsidian Rust MCP v${{ needs.check-version.outputs.version }}
-            
+
             基于 Rust 构建的高性能 Obsidian 知识库 MCP 服务器。
-            
+
             ### 下载
-            
+
             | 平台 | 架构 | 下载 |
             |------|------|------|
             | Windows | x64 | [obsidian-mcp-x86_64-pc-windows-msvc.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/obsidian-mcp-x86_64-pc-windows-msvc.zip) |
             | Linux | x64 | [obsidian-mcp-x86_64-unknown-linux-gnu.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/obsidian-mcp-x86_64-unknown-linux-gnu.tar.gz) |
             | macOS | x64 | [obsidian-mcp-x86_64-apple-darwin.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/obsidian-mcp-x86_64-apple-darwin.tar.gz) |
             | macOS | ARM64 | [obsidian-mcp-aarch64-apple-darwin.tar.gz](https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.version }}/obsidian-mcp-aarch64-apple-darwin.tar.gz) |
-            
+
             ### MCP 配置示例
-            
+
             ```json
             {
               "mcpServers": {
                 "obsidian-mcp": {
-                  "command": "/path/to/obsidian-mcp"
+                  "command": "/path/to/obsidian-mcp",
+                  "env": {
+                    "OBSIDIAN_VAULT_ROOT": "/path/to/your/vault"
+                  }
                 }
               }
             }
             ```
-            
+
             ### 提供的工具
-            
+
             - `note_index_tree` - 获取完整文件树和标签索引
             - `query_note` - 搜索笔记（支持标签、文件名、关键词）
             - `read_note` - 读取笔记完整内容
