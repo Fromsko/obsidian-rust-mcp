@@ -1,3 +1,26 @@
+---
+project: Obsidian Rust MCP
+description: High-performance MCP server for Obsidian knowledge base management
+language: Rust
+version: 0.1.1
+author: Fromsko
+email: fromsko@example.com
+license: MIT
+keywords:
+  - MCP
+  - Obsidian
+  - Rust
+  - Knowledge Management
+  - Model Context Protocol
+  - Note Management
+  - File Tree Indexing
+  - Smart Search
+  - Tag System
+  - High Performance
+repository: https://github.com/fromsko/obsidian-rust-mcp
+documentation: https://github.com/fromsko/obsidian-rust-mcp/blob/main/README.md
+---
+
 # Obsidian Rust MCP
 
 [中文文档](./README_CN.md)
@@ -67,11 +90,28 @@ Get the complete writing guidelines for the vault (directory structure, naming c
 
 ## Configuration
 
-Edit the `VAULT_ROOT` constant in `src/main.rs` to point to your Obsidian vault:
+### Option 1: Environment Variable (Recommended)
+Set the `OBSIDIAN_VAULT_ROOT` environment variable to point to your Obsidian vault:
+
+```bash
+# Linux/macOS
+export OBSIDIAN_VAULT_ROOT="/path/to/your/vault"
+
+# Windows (cmd)
+set OBSIDIAN_VAULT_ROOT=D:\notes\Fromsko
+
+# Windows (PowerShell)
+$env:OBSIDIAN_VAULT_ROOT="D:\notes\Fromsko"
+```
+
+### Option 2: Hardcoded Path
+Edit the `VAULT_ROOT` constant in `src/main.rs`:
 
 ```rust
 const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 ```
+
+**Note**: The environment variable takes priority over the hardcoded path.
 
 ## Valid Directories
 
@@ -85,6 +125,14 @@ Notes can be organized in the following directories:
 - `cheatsheet` - Quick reference guides
 - `journal` - Daily journals
 
+## Screenshots
+
+### Agent Integration
+![Agent Integration](docs/imgs/agents_readme.png)
+
+### Note Example
+![Note Example](docs/imgs/random_note.png)
+
 ## License
 
-MIT
+MIT - see [LICENSE](./LICENSE) file for details.

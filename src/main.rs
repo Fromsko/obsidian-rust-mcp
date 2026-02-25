@@ -1,3 +1,52 @@
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║                      OBSIDIAN RUST MCP SERVER                               ║
+// ║                    High-Performance Knowledge Base Manager                   ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
+//
+// 🎯 PURPOSE: MCP (Model Context Protocol) server for Obsidian knowledge base management
+// 🔧 TECHNOLOGY: Rust + rmcp library + async/await
+// 📁 TARGET: Obsidian vault with structured markdown notes
+//
+// ════════════════════════════════════════════════════════════════════════════════════
+// 🔄 COMPLETE WORKFLOW FOR LLM:
+// ════════════════════════════════════════════════════════════════════════════════════
+//
+// 1️⃣  INITIALIZATION
+//    ├─ Read OBSIDIAN_VAULT_ROOT env var or fallback to VAULT_ROOT const
+//    ├─ Build VaultIndex by scanning all .md files
+//    ├─ Parse frontmatter (tags, aliases, status) from each note
+//    ├─ Create mappings: tag→notes, name→note
+//    └─ Start MCP server with stdio transport
+//
+// 2️⃣  AVAILABLE TOOLS (5 tools total)
+//    ├─ 📂 note_index_tree() → Complete file tree + tag statistics
+//    ├─ 📋 write_note_tips() → Writing guidelines and conventions
+//    ├─ 🔍 query_note(params) → Multi-mode search (tags/exact/keyword)
+//    ├─ 📖 read_note(path) → Read full note content by path
+//    └─ ✏️  write_note(params) → Create/append notes with auto-frontmatter
+//
+// 3️⃣  TYPICAL USAGE PATTERNS
+//    ├─ Discovery: note_index_tree() → understand vault structure
+//    ├─ Guidelines: write_note_tips() → learn writing conventions
+//    ├─ Search: query_note() → find relevant notes
+//    ├─ Read: read_note() → get full content
+//    └─ Write: write_note() → create new notes
+//
+// 4️⃣  VALIDATION & SECURITY
+//    ├─ Path validation (no ".." traversal)
+//    ├─ Directory whitelist (8 valid dirs only)
+//    ├─ Filename validation (lowercase+hyphens only)
+//    ├─ Status validation (active/archived/draft)
+//    └─ Auto frontmatter generation with timestamps
+//
+// 5️⃣  NOTE STRUCTURE (Obsidian format)
+//    ├─ Frontmatter: tags, aliases, created, updated, status
+//    ├─ Content: Markdown with Callouts and Wikilinks
+//    ├─ Sections: ## 相关笔记 at the end
+//    └─ File naming: lowercase-with-hyphens.md
+//
+// ════════════════════════════════════════════════════════════════════════════════════
+
 use anyhow::Result;
 use rmcp::{
     model::*,
@@ -14,10 +63,16 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use walkdir::WalkDir;
 
+
+// default vault root
 const VAULT_ROOT: &str = r"D:\notes\Fromsko";
-// const VAULT_ROOT: &str = r"C:\Users\Administrator\Desktop\ai-code\prompts\notes";
 
 const WRITE_NOTE_TIPS: &str = include_str!("../write-note-tips.md");
+
+fn get_vault_root() -> String {
+    std::env::var("OBSIDIAN_VAULT_ROOT")
+        .unwrap_or_else(|_| VAULT_ROOT.to_string())
+}
 
 fn flexible_string_vec<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
 where
@@ -261,7 +316,7 @@ pub struct ObsidianMcp {
 
 impl ObsidianMcp {
     pub fn new() -> Self {
-        let vault_root = PathBuf::from(VAULT_ROOT);
+        let vault_root = PathBuf::from(get_vault_root());
         let index = build_index(&vault_root);
         Self {
             index: Arc::new(RwLock::new(index)),
@@ -646,7 +701,7 @@ async fn main() -> Result<()> {
         .with_ansi(false)
         .init();
 
-    tracing::info!("Obsidian MCP Server starting, vault: {}", VAULT_ROOT);
+    tracing::info!("Obsidian MCP Server starting, vault: {}", get_vault_root());
 
     let service = ObsidianMcp::new().serve(stdio()).await?;
     service.waiting().await?;

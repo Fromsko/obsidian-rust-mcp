@@ -1,3 +1,26 @@
+---
+project: Obsidian Rust MCP
+description: 基于 Rust 构建的高性能 Obsidian 知识库 MCP 服务器
+language: Rust
+version: 0.1.1
+author: Fromsko
+email: fromsko@example.com
+license: MIT
+keywords:
+  - MCP
+  - Obsidian
+  - Rust
+  - 知识管理
+  - 模型上下文协议
+  - 笔记管理
+  - 文件树索引
+  - 智能搜索
+  - 标签系统
+  - 高性能
+repository: https://github.com/fromsko/obsidian-rust-mcp
+documentation: https://github.com/fromsko/obsidian-rust-mcp/blob/main/README_CN.md
+---
+
 # Obsidian Rust MCP
 
 [English](./README.md)
@@ -67,11 +90,28 @@ cargo build --release
 
 ## 配置
 
-编辑 `src/main.rs` 中的 `VAULT_ROOT` 常量，指向你的 Obsidian 知识库：
+### 选项 1：环境变量（推荐）
+设置 `OBSIDIAN_VAULT_ROOT` 环境变量指向您的 Obsidian 知识库：
+
+```bash
+# Linux/macOS
+export OBSIDIAN_VAULT_ROOT="/path/to/your/vault"
+
+# Windows (cmd)
+set OBSIDIAN_VAULT_ROOT=D:\notes\Fromsko
+
+# Windows (PowerShell)
+$env:OBSIDIAN_VAULT_ROOT="D:\notes\Fromsko"
+```
+
+### 选项 2：硬编码路径
+编辑 `src/main.rs` 中的 `VAULT_ROOT` 常量：
 
 ```rust
 const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 ```
+
+**注意**：环境变量优先级高于硬编码路径。
 
 ## 有效目录
 
@@ -85,6 +125,14 @@ const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 - `cheatsheet` - 快速参考指南
 - `journal` - 日常日志
 
+## 截图
+
+### 代理集成
+![代理集成](docs/imgs/agents_readme.png)
+
+### 笔记示例
+![笔记示例](docs/imgs/random_note.png)
+
 ## 许可证
 
-MIT
+MIT - 详见 [LICENSE](./LICENSE) 文件。
