@@ -3,7 +3,7 @@
 project: Obsidian Rust MCP
 description: High-performance MCP server for Obsidian knowledge base management
 language: Rust
-version: 0.1.2
+version: 0.1.3
 author: Fromsko
 email: fromsko@example.com
 license: MIT
@@ -35,6 +35,8 @@ A high-performance MCP (Model Context Protocol) server for Obsidian knowledge ba
 - 📂 **File Tree Indexing** - Get complete vault structure and tag overview
 - 🔍 **Smart Search** - Query notes by tags, exact name, or fuzzy keyword matching
 - 📝 **Note Management** - Read and write notes with automatic frontmatter generation
+- 📁 **Subdirectory Support** - Organize notes in nested directories (e.g., `projects/easytier`, `journal/2026-03`)
+- 🛡️ **Input Validation** - Directory whitelist, filename sanitization, path traversal protection
 - 🏷️ **Tag System** - Organize notes with tags and aliases
 - ⚡ **High Performance** - Built with Rust for speed and reliability
 
@@ -74,7 +76,7 @@ Example:
 ```
 
 ### `write_note`
-Create or append to notes with automatic frontmatter generation.
+Create or append to notes with automatic frontmatter generation. Supports subdirectories (e.g., `projects/easytier`, `journal/2026-03`, up to 3 levels deep).
 
 Example:
 ```json
@@ -108,10 +110,10 @@ $env:OBSIDIAN_VAULT_ROOT="D:\notes\Fromsko"
 ```
 
 ### Option 2: Hardcoded Path
-Edit the `VAULT_ROOT` constant in `src/main.rs`:
+Edit the `VAULT_ROOT` constant in `src/config.rs`:
 
 ```rust
-const VAULT_ROOT: &str = r"D:\notes\Fromsko";
+pub const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 ```
 
 ### Option 3: MCP Client Configuration (Recommended for MCP clients)
@@ -135,7 +137,7 @@ Replace `/path/to/obsidian-mcp` with the actual path to your compiled binary, an
 
 ## Valid Directories
 
-Notes can be organized in the following directories:
+Notes can be organized in the following top-level directories (subdirectories supported, max 3 levels):
 - `tech` - Technical notes
 - `ai` - AI/ML related notes
 - `projects` - Project documentation
@@ -144,6 +146,26 @@ Notes can be organized in the following directories:
 - `ideas` - Ideas and brainstorming
 - `cheatsheet` - Quick reference guides
 - `journal` - Daily journals
+
+## Project Structure
+
+```
+src/
+  main.rs          # Entry point, tracing init, serve()
+  config.rs        # Constants & vault root config
+  types.rs         # Request/response types with schemars
+  server.rs        # MCP tool handlers
+  validation.rs    # Input validation (directory, filename, status, path)
+  frontmatter.rs   # YAML frontmatter parsing & generation
+  index.rs         # Vault index builder
+  file_tree.rs     # File tree visualization
+```
+
+## Testing
+
+```bash
+cargo test  # 40 unit tests
+```
 
 ## Screenshots
 

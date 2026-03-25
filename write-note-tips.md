@@ -2,53 +2,28 @@
 
 > 本文件面向 AI 代理（LLM），规范对此 Obsidian Vault 的所有读写操作。
 
-## 知识库根目录
-
-```
-D:\notes\Fromsko
-```
-
----
-
 ## 目录结构与分区职责
 
-| 目录 | 用途 | 写入规则 |
-|------|------|---------|
-| `tech/` | 技术知识（Docker、Linux、Git、SSH、VSCode、Zed、Rust、Wails、部署） | 按主题合并，一个主题一篇，禁止拆散 |
-| `ai/` | AI 工程（AGENTS.md 规范、MCP 开发、AI 工具对比、Kiro、Prompt） | 同上 |
-| `projects/` | 项目实践文档 | 按项目名建子目录，如 `projects/easytier/` |
-| `methods/` | 学习方法论、思维模型、工作流 | 只存方法论，不存技术细节 |
-| `career/` | 简历、面试、心态管理 | 个人职业相关 |
-| `ideas/` | 项目构想和设计草案 | 未实现的想法 |
-| `cheatsheet/` | 速查手册（API 密钥、工具路径、代理脚本、代码片段） | 短小精悍，速查为主 |
-| `journal/` | 工作日志，按 `journal/YYYY-MM/` 组织 | 日志文件名格式：`YYYY-MM-DD-主题.md` |
+| 目录 | 用途 |
+|------|------|
+| `tech/` | 技术知识（Docker、Linux、Git、SSH、VSCode、Zed、Rust、Wails、部署） |
+| `ai/` | AI 工程（AGENTS.md 规范、MCP 开发、AI 工具对比、Kiro、Prompt） |
+| `projects/` | 项目实践文档，按项目名建子目录，如 `projects/easytier/` |
+| `methods/` | 学习方法论、思维模型、工作流 |
+| `career/` | 简历、面试、心态管理 |
+| `ideas/` | 项目构想和设计草案 |
+| `cheatsheet/` | 速查手册（API 密钥、工具路径、代理脚本、代码片段） |
+| `journal/` | 工作日志，按 `journal/YYYY-MM/` 组织，文件名格式：`YYYY-MM-DD-主题.md` |
+
+> 支持子目录，如 `projects/easytier`、`journal/2026-03`、`ai/mcp/protocol`，最多 3 层。
 
 ---
 
 ## 文件命名规范
 
-- **全部使用英文小写 + 短横线**：`docker-guide.md`、`mcp-development.md`
-- **禁止**：中文文件名、数字编号前缀（如 `06-01-001-xxx.md`）、空格
 - **语义化**：文件名应能直接反映内容主题
 
----
-
-## Frontmatter 格式（必须）
-
-每个 `.md` 文件必须包含以下 YAML Frontmatter：
-
-```yaml
----
-tags:
-  - tag1
-  - tag2
-aliases:
-  - 中文别名
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
-status: active  # active | archived | draft
----
-```
+> 格式规则（英文小写+数字+短横线）和目录合法性由程序自动校验，无需额外检查。
 
 ---
 
@@ -83,7 +58,7 @@ status: active  # active | archived | draft
 
 ### 查找文件
 
-1. 先查阅 `README.md` 总索引确定文件所属分区
+1. 先调用 `note_index_tree` 查看文件树确定文件所属分区
 2. 按分区目录查找目标文件
 3. 使用文件名（英文）或 `aliases`（中文别名）定位
 
@@ -101,26 +76,25 @@ status: active  # active | archived | draft
 
 1. **确定分区** — 根据内容选择正确的目录
 2. **检查是否已有同主题文件** — 有则追加/更新，禁止创建重复文件
-3. **命名** — 英文小写短横线，语义化
-4. **格式** — 必须包含 Frontmatter + 概述 Callout + 相关笔记
-5. **路径** — 只在上述 8 个分区目录中创建，禁止在根目录或其他位置创建
+3. **命名** — 语义化英文文件名
+4. **格式** — 必须包含概述 Callout + 相关笔记章节
+5. **路径** — 只在上述 8 个分区目录中创建
 
 ### 更新现有文件
 
-1. **更新 `updated` 日期** 为当天
-2. **追加内容放在合适的章节下**，不要打乱已有结构
-3. **保持 Callout 和 Wikilinks 风格一致**
-4. **不删除已有内容**，除非用户明确要求
+1. **追加内容放在合适的章节下**，不要打乱已有结构
+2. **保持 Callout 和 Wikilinks 风格一致**
+3. **不删除已有内容**，除非用户明确要求
+
+> `updated` 日期由程序自动更新。Frontmatter 由服务自动生成，content 中不要包含。
 
 ### 禁止事项
 
-- ❌ 在根目录创建随意文件
-- ❌ 使用中文文件名或带空格的文件名
 - ❌ 创建与已有文件主题重复的新文件
-- ❌ 使用数字编号前缀命名（如 `01-xxx.md`）
 - ❌ 删除或覆盖 `cheatsheet/api-keys.md` 中的密钥
 - ❌ 在非 `journal/` 目录写日志类内容
-- ❌ 输出时省略 Frontmatter
+- ❌ content 中缺少概述 Callout（`> [!abstract] 概述`）
+- ❌ content 中缺少 `## 相关笔记` 章节
 - ❌ 使用 Markdown 链接替代 Wikilinks 引用本库内文件
 
 ---
@@ -139,7 +113,7 @@ status: active  # active | archived | draft
 
 | 操作 | 步骤 |
 |------|------|
-| 查找 Docker 笔记 | `README.md` → tech/ → `[[docker-guide]]` |
+| 查找 Docker 笔记 | `note_index_tree` → tech/ → `[[docker-guide]]` |
 | 新增 MCP 内容 | 更新 `ai/mcp-development.md`，不要新建文件 |
 | 记录新项目 | `projects/<project-name>/` 新建子目录 |
 | 添加 API 密钥 | 追加到 `cheatsheet/api-keys.md` |
@@ -154,23 +128,6 @@ status: active  # active | archived | draft
 
 > [!abstract] 概述
 > 个人技术笔记与知识管理系统，涵盖技术实践、AI 工程、项目经验、方法论和职业发展。
-
----
-
-## 目录结构
-
-```
-├── tech/          技术知识（8篇）
-├── ai/            AI 工程（5篇）
-├── projects/      项目实践
-│   ├── easytier/  EasyTier P2P VPN（20篇）
-│   └── cmp/       CMP 排障（1篇）
-├── methods/       方法论（3篇）
-├── career/        职业发展（3篇）
-├── ideas/         项目构想（1篇）
-├── cheatsheet/    速查手册（4篇）
-└── journal/       工作日志
-```
 
 ---
 
@@ -261,32 +218,7 @@ status: active  # active | archived | draft
 
 ## MCP 工具调用示例
 
-> 本节面向 LLM，提供四个工具的正确和错误调用示例。严格按照示例格式传参。
-
-### note_index_tree — 获取文件树和标签索引
-
-无需任何参数，直接调用即可。
-
-```json
-✅ 正确：
-{}
-
-❌ 错误：
-{"path": "tech/"}          // 不接受任何参数
-{"directory": "ai"}        // 不接受任何参数
-```
-
-### write_note_tips — 查阅写入规范
-
-无需任何参数，直接调用即可。首次操作知识库前**必须**调用此工具。
-
-```json
-✅ 正确：
-{}
-
-❌ 错误：
-{"topic": "frontmatter"}   // 不接受任何参数
-```
+> 本节面向 LLM，提供各工具的正确调用示例。参数校验由程序自动完成，以下仅展示用法。
 
 ### query_note — 搜索笔记
 
@@ -304,22 +236,6 @@ status: active  # active | archived | draft
 
 ✅ 混合查询（标签 + 关键词）：
 {"tags": ["rust"], "keyword": "mcp"}
-
-✅ 三种同时使用：
-{"tags": ["ai"], "exact_name": "mcp-development", "keyword": "SDK"}
-
-❌ 不传任何参数：
-{}
-// 错误：至少提供 tags、exact_name 或 keyword 中的一个
-
-❌ 参数名拼写错误：
-{"tag": ["docker"]}        // 应该是 "tags"（复数）
-{"name": "docker-guide"}   // 应该是 "exact_name"
-{"search": "Docker"}       // 应该是 "keyword"
-
-❌ 类型错误：
-{"tags": "docker"}         // tags 必须是数组，应该是 ["docker"]
-{"exact_name": ["a","b"]}  // exact_name 必须是字符串
 ```
 
 ### read_note — 读取笔记完整内容
@@ -332,25 +248,6 @@ status: active  # active | archived | draft
 
 ✅ 读取子目录下的笔记：
 {"path": "projects/easytier/01-project-overview.md"}
-
-✅ 读取 cheatsheet：
-{"path": "cheatsheet/api-keys.md"}
-
-❌ 路径为空：
-{}
-// 错误：缺少 path 参数
-
-❌ 使用绝对路径：
-{"path": "D:\\notes\\Fromsko\\tech\\docker-guide.md"}
-// 应该用相对路径 "tech/docker-guide.md"
-
-❌ 路径穿越：
-{"path": "../secret.md"}
-// 错误：路径不能包含 ..
-
-❌ 文件不存在：
-{"path": "tech/not-exist.md"}
-// 错误：文件不存在
 ```
 
 ### write_note — 写入笔记
@@ -368,6 +265,16 @@ status: active  # active | archived | draft
   "content": "> [!abstract] 概述\n> Nginx 反向代理与负载均衡配置指南。\n\n## 基础配置\n\n```nginx\nserver {\n    listen 80;\n    server_name example.com;\n}\n```\n\n## 相关笔记\n\n- [[docker-guide]]\n- [[server-deploy]]"
 }
 
+✅ 创建子目录笔记：
+{
+  "directory": "journal/2026-03",
+  "filename": "26-obsidian-refactor",
+  "tags": ["journal", "mcp", "rust"],
+  "aliases": ["Obsidian MCP 重构日志"],
+  "status": "active",
+  "content": "> [!abstract] 概述\n> 完成了 Obsidian MCP 服务的模块化重构。\n\n## 完成事项\n\n- 拆分为 7 个模块\n- 40 个测试全部通过\n\n## 相关笔记\n\n- [[mcp-development]]"
+}
+
 ✅ 追加到已有笔记（文件已存在时自动追加，updated 日期自动更新）：
 {
   "directory": "ai",
@@ -377,49 +284,11 @@ status: active  # active | archived | draft
   "status": "active",
   "content": "## 新增章节\n\n这里是追加的内容。"
 }
-
-✅ 创建工作日志：
-{
-  "directory": "journal",
-  "filename": "2026-02-12-obsidian-mcp",
-  "tags": ["journal", "mcp", "rust"],
-  "aliases": ["Obsidian MCP 开发日志"],
-  "status": "active",
-  "content": "> [!abstract] 概述\n> 今天完成了 Obsidian MCP 服务的开发。\n\n## 完成事项\n\n- 实现了四个工具\n- 编译通过\n\n## 相关笔记\n\n- [[mcp-development]]"
-}
-
-❌ 缺少必填参数：
-{"directory": "tech", "filename": "test"}
-// 错误：缺少 tags, aliases, status, content
-
-❌ 无效的目录名：
-{"directory": "docs", ...}
-// 错误：目录必须是 tech/ai/projects/methods/career/ideas/cheatsheet/journal 之一
-
-❌ 文件名包含中文或大写：
-{"filename": "Docker指南", ...}    // 禁止中文
-{"filename": "Docker-Guide", ...}  // 必须全小写
-{"filename": "my guide", ...}      // 禁止空格
-
-❌ 无效的状态值：
-{"status": "published", ...}       // 必须是 active/archived/draft 之一
-
-❌ content 中包含 frontmatter：
-{"content": "---\ntags:\n  - test\n---\n正文", ...}
-// 错误：frontmatter 由服务自动生成，content 只写正文
-
-❌ content 中缺少概述 Callout：
-{"content": "## 标题\n\n直接写内容", ...}
-// 应该以 > [!abstract] 概述 开头
-
-❌ content 中缺少相关笔记章节：
-{"content": "> [!abstract] 概述\n> 内容\n\n## 正文\n\n...", ...}
-// 末尾必须有 ## 相关笔记 章节
 ```
 
 ### 典型工作流
 
-1. 首次使用 → 调用 `write_note_tips` 查阅规范
+1. 首次使用 → 调用 `write_note_tips` 查阅本规范
 2. 了解库结构 → 调用 `note_index_tree` 查看文件树和标签
 3. 查找笔记 → 调用 `query_note` 搜索是否已有同主题文件
 4. 阅读笔记 → 调用 `read_note` 读取笔记完整内容

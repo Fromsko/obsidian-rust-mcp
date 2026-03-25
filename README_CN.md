@@ -3,7 +3,7 @@
 project: Obsidian Rust MCP
 description: 基于 Rust 构建的高性能 Obsidian 知识库 MCP 服务器
 language: Rust
-version: 0.1.2
+version: 0.1.3
 author: Fromsko
 email: fromsko@example.com
 license: MIT
@@ -35,6 +35,8 @@ documentation: https://github.com/fromsko/obsidian-rust-mcp/blob/main/README_CN.
 - 📂 **文件树索引** - 获取完整的知识库结构和标签概览
 - 🔍 **智能搜索** - 通过标签、精确文件名或模糊关键词查询笔记
 - 📝 **笔记管理** - 读写笔记，自动生成 Frontmatter
+- 📁 **子目录支持** - 在嵌套目录中组织笔记（如 `projects/easytier`、`journal/2026-03`）
+- 🛡️ **输入校验** - 目录白名单、文件名过滤、路径穿越防护
 - 🏷️ **标签系统** - 使用标签和别名组织笔记
 - ⚡ **高性能** - 使用 Rust 构建，速度快且可靠
 
@@ -74,7 +76,7 @@ cargo build --release
 ```
 
 ### `write_note`
-创建或追加笔记内容，自动生成 Frontmatter。
+创建或追加笔记内容，自动生成 Frontmatter。支持子目录（如 `projects/easytier`、`journal/2026-03`，最多 3 层）。
 
 示例：
 ```json
@@ -108,10 +110,10 @@ $env:OBSIDIAN_VAULT_ROOT="D:\notes\Fromsko"
 ```
 
 ### 选项 2：硬编码路径
-编辑 `src/main.rs` 中的 `VAULT_ROOT` 常量：
+编辑 `src/config.rs` 中的 `VAULT_ROOT` 常量：
 
 ```rust
-const VAULT_ROOT: &str = r"D:\notes\Fromsko";
+pub const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 ```
 
 ### 选项 3：MCP 客户端配置（推荐用于 MCP 客户端）
@@ -135,7 +137,7 @@ const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 
 ## 有效目录
 
-笔记可以组织在以下目录中：
+笔记可以组织在以下顶级目录中（支持子目录，最多 3 层）：
 - `tech` - 技术笔记
 - `ai` - AI/机器学习相关笔记
 - `projects` - 项目文档
@@ -144,6 +146,26 @@ const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 - `ideas` - 想法和头脑风暴
 - `cheatsheet` - 快速参考指南
 - `journal` - 日常日志
+
+## 项目结构
+
+```
+src/
+  main.rs          # 入口，tracing 初始化，serve()
+  config.rs        # 常量与知识库根目录配置
+  types.rs         # 请求/响应类型（schemars 描述）
+  server.rs        # MCP 工具处理器
+  validation.rs    # 输入校验（目录、文件名、状态、路径）
+  frontmatter.rs   # YAML Frontmatter 解析与生成
+  index.rs         # 知识库索引构建
+  file_tree.rs     # 文件树可视化
+```
+
+## 测试
+
+```bash
+cargo test  # 40 个单元测试
+```
 
 ## 截图
 
