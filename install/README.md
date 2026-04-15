@@ -1,34 +1,37 @@
 # Windows 一键安装
 
-本目录包含 Windows PowerShell 一键安装脚本，可快速安装 Obsidian Rust MCP。
+本目录包含 Windows PowerShell 一键安装脚本，用于**本地构建并覆盖安装** Obsidian Rust MCP。
 
-## 安装脚本
+## 文件
 
 | 文件 | 说明 |
 |------|------|
 | `install.ps1` | PowerShell 安装脚本 |
 
+## 设计原则
+
+- **仅做安装**：脚本只负责本地构建、停止旧进程、覆盖复制二进制文件
+- **不改客户端配置**：不会自动修改 Claude Desktop 或其他 MCP 客户端配置
+- **支持强制覆盖**：可选 `-Force $true`，先停止旧进程再替换
+
 ## 快速开始
 
-### 方式一：克隆后直接运行
+### 默认安装
 
 ```powershell
-git clone https://github.com/Fromsko/obsidian-rust-mcp.git
-cd obsidian-rust-mcp
-.\install.ps1
+.\install\install.ps1
 ```
 
-### 方式二：指定参数安装
+### 指定安装目录
 
 ```powershell
-# 指定安装目录和 MCP 名称
-.\install.ps1 -InstallDir "D:\Tools\obsidian-mcp" -McpName "my-obsidian"
+.\install\install.ps1 -InstallDir "D:\Tools\obsidian-mcp"
+```
 
-# 指定知识库路径
-.\install.ps1 -VaultRoot "D:\notes\MyVault"
+### 覆盖安装到指定目录
 
-# 组合使用
-.\install.ps1 -InstallDir "D:\Tools\mcp" -McpName "vault" -VaultRoot "D:\notes\vault"
+```powershell
+.\install\install.ps1 -InstallDir "C:\Users\Administrator\go\bin" -Force $true
 ```
 
 ## 参数说明
@@ -36,92 +39,67 @@ cd obsidian-rust-mcp
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `InstallDir` | string | `$env:LOCALAPPDATA\obsidian-mcp` | 安装目录 |
-| `McpName` | string | `obsidian-mcp` | MCP 服务名称 |
-| `VaultRoot` | string | (空) | Obsidian 知识库路径 |
-| `Build` | bool | `$true` | 是否先构建项目 |
-| `Force` | bool | `$false` | 是否强制安装（停止旧进程） |
+| `Build` | bool | `$true` | 是否先本地构建项目 |
+| `Force` | bool | `$false` | 是否停止旧进程并强制覆盖 |
 
 ## 使用示例
 
-### 1. 基础安装（自动构建）
+### 1. 本地构建并安装
 
 ```powershell
-.\install.ps1
+.\install\install.ps1 -Build $true
 ```
 
-### 2. 强制安装（停止旧进程）
+### 2. 不构建，直接安装已有二进制
 
 ```powershell
-# 如果有旧进程在运行，先停止再安装
-.\install.ps1 -Force
+.\install\install.ps1 -Build $false
 ```
 
-### 3. 仅安装不构建（需要已有 Release 二进制）
+### 3. 停止旧进程并覆盖安装
 
 ```powershell
-.\install.ps1 -Build $false
+.\install\install.ps1 -InstallDir "C:\Users\Administrator\go\bin" -Force $true -Build $false
 ```
 
-### 4. 自定义安装
+### 4. 完整示例
 
 ```powershell
-# 安装到 D:\Tools\mcp，命名为 "my-vault"
-.\install.ps1 -InstallDir "D:\Tools\mcp" -McpName "my-vault"
+.\install\install.ps1 -InstallDir "D:\Apps\obsidian-mcp" -Build $true -Force $true
 ```
 
-### 5. 指定知识库路径
+## 安装逻辑
+
+1. 可选：检测并停止正在运行的 `obsidian-mcp` 进程（`-Force $true`）
+2. 可选：执行本地构建 `cargo build --release`
+3. 检查本地构建产物 `target\release\obsidian-mcp.exe`
+4. 创建安装目录
+5. 覆盖复制到目标路径
+
+## 注意事项
+
+### 1. 需要 Rust 环境
+
+如果启用 `-Build $true`，请确保已安装 Rust：
+
+https://rustup.rs
+
+### 2. 目标文件被占用
+
+如果目标文件正在运行或被占用，请使用：
 
 ```powershell
-.\install.ps1 -VaultRoot "D:\notes\MyObsidianVault"
+.\install\install.ps1 -InstallDir "C:\Users\Administrator\go\bin" -Force $true
 ```
 
-### 6. 完整参数
+### 3. PowerShell 执行策略
+
+如果提示脚本执行被禁止：
 
 ```powershell
-.\install.ps1 -InstallDir "D:\Apps\obsidian-mcp" -McpName "notes" -VaultRoot "D:\notes\vault" -Build $true -Force $true
-```
-
-### 7. 强制升级（停止旧进程后安装）
-
-```powershell
-# 自动检测并停止正在运行的旧版本，然后安装新版本
-.\install.ps1 -Force
-```
-
-## 安装后
-
-1. **Claude Desktop 用户**：重启 Claude Desktop 即可使用
-2. **其他 MCP 客户端**：将安装目录添加到 PATH，或使用完整路径
-
-## 卸载
-
-```powershell
-# 删除安装目录
-Remove-Item -Recurse -Force "$env:LOCALAPPDATA\obsidian-mcp"
-
-# 从 Claude Desktop 移除配置（需手动编辑 claude_desktop_config.json）
-```
-
-## 故障排除
-
-### Execution Policy 错误
-
-```powershell
-# 如果遇到脚本执行策略错误
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-.\install.ps1
 ```
 
-### 未找到 Rust 环境
+## 说明
 
-确保已安装 Rust：https://rustup.rs
-
-### 构建失败
-
-```powershell
-# 手动构建
-cargo build --release
-
-# 然后跳过构建步骤
-.\install.ps1 -Build $false
-```
+该脚本**不会自动写入 MCP 客户端配置**。安装完成后，请自行在 Claude Desktop、Cursor 或其他 MCP 客户端中配置可执行文件路径。
