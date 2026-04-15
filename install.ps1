@@ -18,6 +18,9 @@
 .PARAMETER Build
     是否先构建项目，默认为 true
 
+.PARAMETER Force
+    是否强制安装（停止旧进程后再安装），默认为 false
+
 .EXAMPLE
     # 默认安装
     .\install.ps1
@@ -29,13 +32,18 @@
 .EXAMPLE
     # 指定知识库路径
     .\install.ps1 -VaultRoot "D:\notes\MyVault"
+
+.EXAMPLE
+    # 强制安装（停止旧进程）
+    .\install.ps1 -Force
 #>
 
 param(
     [string]$InstallDir = "$env:LOCALAPPDATA\obsidian-mcp",
     [string]$McpName = "obsidian-mcp",
     [string]$VaultRoot = "",
-    [bool]$Build = $true
+    [bool]$Build = $true,
+    [bool]$Force = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -59,7 +67,56 @@ Write-Host "   MCP 名称: $McpName"
 if ($VaultRoot) {
     Write-Host "   知识库路径: $VaultRoot"
 }
+if ($Force) {
+    Write-Host "   强制安装: 是 (将停止旧进程)"
+}
 Write-Host ""
+
+# 0. 强制模式：停止旧进程
+if ($Force) {
+    Write-Host "🔍 正在检查旧进程..." -ForegroundColor Cyan
+
+    $oldBinaryPath = "$InstallDir\obsidian-mcp.exe"
+    $runningProcesses = Get-Process -Name "obsidian-mcp" -ErrorAction SilentlyContinue
+
+    if ($runningProcesses) {
+        Write-Warn "发现正在运行的 obsidian-mcp 进程，准备停止..."
+
+        # 先尝试优雅关闭
+        foreach ($proc in $runningProcesses) {
+            Write-Info "正在停止进程 PID: $($proc.Id)"
+            try {
+                $proc.CloseMainWindow() | Out-Null
+                Start-Sleep -Milliseconds 500
+
+                if (-not $proc.HasExited) {
+                    Write-Info "进程未响应，强制终止..."
+                    $proc.Kill()
+                }
+            }
+            catch {
+                Write-Warn "无法优雅关闭，强制终止进程..."
+                $proc.Kill() -Force
+            }
+        }
+
+        # 等待进程完全退出
+        Start-Sleep -Seconds 1
+
+        # 再次检查
+        $stillRunning = Get-Process -Name "obsidian-mcp" -ErrorAction SilentlyContinue
+        if ($stillRunning) {
+            Write-Warn "进程仍在运行，等待中..."
+            Start-Sleep -Seconds 2
+        }
+
+        Write-Success "旧进程已停止"
+    } else {
+        Write-Info "没有发现运行中的进程"
+    }
+
+    Write-Host ""
+}
 
 # 1. 构建项目
 if ($Build) {

@@ -39,6 +39,7 @@ cd obsidian-rust-mcp
 | `McpName` | string | `obsidian-mcp` | MCP 服务名称 |
 | `VaultRoot` | string | (空) | Obsidian 知识库路径 |
 | `Build` | bool | `$true` | 是否先构建项目 |
+| `Force` | bool | `$false` | 是否强制安装（停止旧进程） |
 
 ## 使用示例
 
@@ -48,29 +49,43 @@ cd obsidian-rust-mcp
 .\install.ps1
 ```
 
-### 2. 仅安装不构建（需要已有 Release 二进制）
+### 2. 强制安装（停止旧进程）
+
+```powershell
+# 如果有旧进程在运行，先停止再安装
+.\install.ps1 -Force
+```
+
+### 3. 仅安装不构建（需要已有 Release 二进制）
 
 ```powershell
 .\install.ps1 -Build $false
 ```
 
-### 3. 自定义安装
+### 4. 自定义安装
 
 ```powershell
 # 安装到 D:\Tools\mcp，命名为 "my-vault"
 .\install.ps1 -InstallDir "D:\Tools\mcp" -McpName "my-vault"
 ```
 
-### 4. 指定知识库路径
+### 5. 指定知识库路径
 
 ```powershell
 .\install.ps1 -VaultRoot "D:\notes\MyObsidianVault"
 ```
 
-### 5. 完整参数
+### 6. 完整参数
 
 ```powershell
-.\install.ps1 -InstallDir "D:\Apps\obsidian-mcp" -McpName "notes" -VaultRoot "D:\notes\vault" -Build $true
+.\install.ps1 -InstallDir "D:\Apps\obsidian-mcp" -McpName "notes" -VaultRoot "D:\notes\vault" -Build $true -Force $true
+```
+
+### 7. 强制升级（停止旧进程后安装）
+
+```powershell
+# 自动检测并停止正在运行的旧版本，然后安装新版本
+.\install.ps1 -Force
 ```
 
 ## 安装后
