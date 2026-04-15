@@ -206,7 +206,7 @@ impl ObsidianMcp {
 
     #[tool(
         name = "write_note",
-        description = "向 Obsidian 知识库写入笔记。自动生成 Frontmatter 头部。如果文件已存在则追加内容并更新 updated 日期。\n\n⚠️ 如果你还没有调用过 write_note_tips 了解本知识库的操作规范，请先调用它。\n\n所有 6 个参数必填。调用示例：{\"directory\": \"tech\", \"filename\": \"nginx-guide\", \"tags\": [\"nginx\"], \"aliases\": [\"Nginx 指南\"], \"status\": \"active\", \"content\": \"> [!abstract] 概述\\n> 内容\\n\\n## 相关笔记\\n\\n- [[docker-guide]]\"}\n\n✅ 支持子目录：directory 可传 \"projects/easytier\"、\"journal/2026-03\" 等路径。"
+        description = "向 Obsidian 知识库写入笔记。自动生成 Frontmatter 头部。如果文件已存在：\n- append=true（默认）：追加内容并更新 updated 日期\n- append=false：覆盖整个文件\n\n⚠️ 如果你还没有调用过 write_note_tips 了解本知识库的操作规范，请先调用它。\n\n所有 6 个参数必填，append 默认为 true。调用示例：{\"directory\": \"tech\", \"filename\": \"nginx-guide\", \"tags\": [\"nginx\"], \"aliases\": [\"Nginx 指南\"], \"status\": \"active\", \"content\": \"> [!abstract] 概述\\n> 内容\\n\\n## 相关笔记\\n\\n- [[docker-guide]]\"}\n\n✅ 支持子目录：directory 可传 \"projects/easytier\"、\"journal/2026-03\" 等路径。\n\n✅ 覆盖模式示例：{\"directory\": \"tech\", \"filename\": \"docker-guide\", \"tags\": [\"docker\"], \"aliases\": [], \"status\": \"active\", \"content\": \"...\", \"append\": false}"
     )]
     async fn write_note(
         &self,
@@ -236,8 +236,27 @@ impl ObsidianMcp {
         }
 
         let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+        let append_mode = params.append;
 
         if file_path.exists() {
+            if !append_mode {
+                // 覆盖模式：重新生成 frontmatter
+                let frontmatter =
+                    generate_frontmatter(&params.tags, &params.aliases, &params.status, &today);
+                let full_content = format!("{}{}", frontmatter, params.content);
+
+                std::fs::write(&file_path, &full_content)
+                    .map_err(|e| McpError::internal_error(format!("写入文件失败: {e}"), None))?;
+
+                self.rebuild_index();
+
+                return Ok(CallToolResult::success(vec![Content::text(format!(
+                    "已覆盖笔记 `{}/{}`，updated 日期已更新为 {today}。",
+                    dir, filename
+                ))]));
+            }
+
+            // 追加模式（默认）
             let existing = std::fs::read_to_string(&file_path)
                 .map_err(|e| McpError::internal_error(format!("读取文件失败: {e}"), None))?;
 
@@ -260,7 +279,8 @@ impl ObsidianMcp {
             self.rebuild_index();
 
             return Ok(CallToolResult::success(vec![Content::text(format!(
-                "已追加内容到 `{dir}/{filename}.md`，updated 日期已更新为 {today}。"
+                "已追加内容到 `{}/{}`，updated 日期已更新为 {today}。",
+                dir, filename
             ))]));
         }
 
@@ -274,7 +294,46 @@ impl ObsidianMcp {
         self.rebuild_index();
 
         Ok(CallToolResult::success(vec![Content::text(format!(
-            "已创建笔记 `{dir}/{filename}.md`。"
+            "已创建笔记 `{}/{}`。",
+            dir, filename
+        ))]))
+    }
+
+    #[tool(
+        name = "delete_note",
+        description = "删除 Obsidian 知识库中的笔记。谨慎使用，此操作不可恢复！\n\n调用示例：{\"path\": \"tech/docker-guide.md\"}"
+    )]
+    async fn delete_note(
+        &self,
+        #[tool(aggr)] Parameters(params): Parameters<DeleteNoteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let rel_path = validation::validate_read_path(&params.path)
+            .map_err(|e| McpError::invalid_params(e, None))?;
+
+        let file_path = self.vault_root.join(&rel_path);
+        if !file_path.exists() {
+            return Err(McpError::invalid_params(
+                format!("文件不存在: {rel_path}"),
+                None,
+            ));
+        }
+
+        // 安全检查：确保文件在 vault_root 内
+        if let Ok(canonical) = file_path.canonicalize() {
+            if let Ok(root) = self.vault_root.canonicalize() {
+                if !canonical.starts_with(&root) {
+                    return Err(McpError::invalid_params("路径超出知识库范围", None));
+                }
+            }
+        }
+
+        std::fs::remove_file(&file_path)
+            .map_err(|e| McpError::internal_error(format!("删除文件失败: {e}"), None))?;
+
+        self.rebuild_index();
+
+        Ok(CallToolResult::success(vec![Content::text(format!(
+            "已删除笔记 `{rel_path}`。"
         ))]))
     }
 }
@@ -285,7 +344,8 @@ impl ObsidianMcp {
         write_note_tips,
         query_note,
         read_note,
-        write_note
+        write_note,
+        delete_note
     });
 }
 

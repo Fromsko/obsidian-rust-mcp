@@ -34,7 +34,8 @@ documentation: https://github.com/fromsko/obsidian-rust-mcp/blob/main/README_CN.
 
 - 📂 **文件树索引** - 获取完整的知识库结构和标签概览
 - 🔍 **智能搜索** - 通过标签、精确文件名或模糊关键词查询笔记
-- 📝 **笔记管理** - 读写笔记，自动生成 Frontmatter
+- 📝 **笔记管理** - 读写和删除笔记，自动生成 Frontmatter
+- 🔄 **追加或覆盖** - 可选择追加模式（默认）或覆盖模式
 - 📁 **子目录支持** - 在嵌套目录中组织笔记（如 `projects/easytier`、`journal/2026-03`）
 - 🛡️ **输入校验** - 目录白名单、文件名过滤、路径穿越防护
 - 🏷️ **标签系统** - 使用标签和别名组织笔记
@@ -76,9 +77,13 @@ cargo build --release
 ```
 
 ### `write_note`
-创建或追加笔记内容，自动生成 Frontmatter。支持子目录（如 `projects/easytier`、`journal/2026-03`，最多 3 层）。
+创建或更新笔记，自动生成 Frontmatter。支持两种模式：
+- **追加模式**（默认）：向现有文件添加内容
+- **覆盖模式**（`append: false`）：替换整个文件
 
-示例：
+支持子目录（如 `projects/easytier`、`journal/2026-03`，最多 3 层）。
+
+追加模式示例：
 ```json
 {
   "directory": "tech",
@@ -86,8 +91,30 @@ cargo build --release
   "tags": ["nginx"],
   "aliases": ["Nginx 指南"],
   "status": "active",
-  "content": "> [!abstract] 概述\n> 内容\n\n## 相关笔记\n\n- [[docker-guide]]"
+  "content": "> [!abstract] 概述\n> 内容\n\n## 相关笔记\n\n- [[docker-guide]]",
+  "append": true
 }
+```
+
+覆盖模式示例：
+```json
+{
+  "directory": "tech",
+  "filename": "nginx-guide",
+  "tags": ["nginx"],
+  "aliases": ["Nginx 指南"],
+  "status": "active",
+  "content": "> [!abstract] 概述\n> 新内容\n\n## 相关笔记\n\n- [[docker-guide]]",
+  "append": false
+}
+```
+
+### `delete_note`
+从知识库中删除笔记。请谨慎使用，此操作不可恢复。
+
+示例：
+```json
+{"path": "tech/docker-guide.md"}
 ```
 
 ### `write_note_tips`

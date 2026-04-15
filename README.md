@@ -34,7 +34,8 @@ A high-performance MCP (Model Context Protocol) server for Obsidian knowledge ba
 
 - 📂 **File Tree Indexing** - Get complete vault structure and tag overview
 - 🔍 **Smart Search** - Query notes by tags, exact name, or fuzzy keyword matching
-- 📝 **Note Management** - Read and write notes with automatic frontmatter generation
+- 📝 **Note Management** - Read, write, and delete notes with automatic frontmatter generation
+- 🔄 **Append or Overwrite** - Choose between append mode (default) or overwrite mode for existing files
 - 📁 **Subdirectory Support** - Organize notes in nested directories (e.g., `projects/easytier`, `journal/2026-03`)
 - 🛡️ **Input Validation** - Directory whitelist, filename sanitization, path traversal protection
 - 🏷️ **Tag System** - Organize notes with tags and aliases
@@ -76,9 +77,13 @@ Example:
 ```
 
 ### `write_note`
-Create or append to notes with automatic frontmatter generation. Supports subdirectories (e.g., `projects/easytier`, `journal/2026-03`, up to 3 levels deep).
+Create or update notes with automatic frontmatter generation. Supports two modes:
+- **Append mode** (default): Adds content to existing file
+- **Overwrite mode** (`append: false`): Replaces entire file
 
-Example:
+Supports subdirectories (e.g., `projects/easytier`, `journal/2026-03`, up to 3 levels deep).
+
+Append mode example:
 ```json
 {
   "directory": "tech",
@@ -86,8 +91,30 @@ Example:
   "tags": ["nginx"],
   "aliases": ["Nginx Guide"],
   "status": "active",
-  "content": "> [!abstract] Overview\n> Content\n\n## Related Notes\n\n- [[docker-guide]]"
+  "content": "> [!abstract] Overview\n> Content\n\n## Related Notes\n\n- [[docker-guide]]",
+  "append": true
 }
+```
+
+Overwrite mode example:
+```json
+{
+  "directory": "tech",
+  "filename": "nginx-guide",
+  "tags": ["nginx"],
+  "aliases": ["Nginx Guide"],
+  "status": "active",
+  "content": "> [!abstract] Overview\n> New content\n\n## Related Notes\n\n- [[docker-guide]]",
+  "append": false
+}
+```
+
+### `delete_note`
+Delete a note from the vault. Use with caution - this operation is irreversible.
+
+Example:
+```json
+{"path": "tech/docker-guide.md"}
 ```
 
 ### `write_note_tips`

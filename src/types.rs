@@ -76,6 +76,10 @@ where
     }
 }
 
+pub fn default_true() -> bool {
+    true
+}
+
 #[derive(Debug, Clone)]
 pub struct NoteEntry {
     pub rel_path: String,
@@ -138,6 +142,21 @@ pub struct WriteNoteParams {
         description = "Markdown 正文内容（不含 frontmatter，由服务自动生成）。内容应遵循 Obsidian 格式规范：使用 Callout、Wikilinks、末尾包含 ## 相关笔记 章节。"
     )]
     pub content: String,
+
+    #[schemars(
+        description = "追加模式（默认 true）。为 false 时会覆盖文件而非追加。"
+    )]
+    #[serde(default = "default_true")]
+    pub append: bool,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+#[schemars(description = "删除笔记的参数。")]
+pub struct DeleteNoteParams {
+    #[schemars(
+        description = "笔记的相对路径，如 \"tech/docker-guide.md\""
+    )]
+    pub path: String,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
