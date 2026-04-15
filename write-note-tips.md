@@ -8,22 +8,97 @@
 |------|------|
 | `tech/` | 技术知识（Docker、Linux、Git、SSH、VSCode、Zed、Rust、Wails、部署） |
 | `ai/` | AI 工程（AGENTS.md 规范、MCP 开发、AI 工具对比、Kiro、Prompt） |
-| `projects/` | 项目实践文档，按项目名建子目录，如 `projects/easytier/` |
+| `projects/` | 项目实践文档，**必须按项目名建立子目录**，如 `projects/easytier/`、`projects/chatbot/` |
 | `methods/` | 学习方法论、思维模型、工作流 |
 | `career/` | 简历、面试、心态管理 |
 | `ideas/` | 项目构想和设计草案 |
 | `cheatsheet/` | 速查手册（API 密钥、工具路径、代理脚本、代码片段） |
 | `journal/` | 工作日志，按 `journal/YYYY-MM/` 组织，文件名格式：`YYYY-MM-DD-主题.md` |
 
-> 支持子目录，如 `projects/easytier`、`journal/2026-03`、`ai/mcp/protocol`，最多 3 层。
+> ✅ **明确允许分层存放**：支持子目录，如 `projects/easytier`、`journal/2026-03`、`ai/mcp/protocol`，最多 3 层。  
+> ❌ **不要强行单层平铺**，特别是项目类内容，禁止把同一项目的多篇文档直接乱放在 `projects/` 根下。
 
 ---
 
-## 文件命名规范
+## 文件组织规范
+
+### 一般文档
 
 - **语义化**：文件名应能直接反映内容主题
+- 例如：`docker-guide`、`mcp-development`、`workflow-ai-notes`
 
-> 格式规则（英文小写+数字+短横线）和目录合法性由程序自动校验，无需额外检查。
+### 项目类文档（重点）
+
+项目文档**推荐采用目录化 + 编号化**组织，而不是随意堆叠。
+
+#### 推荐结构
+
+```text
+projects/
+  easytier/
+    README.md                  # 项目目录说明 / 导航页
+    01-project-overview.md     # 项目概览
+    02-network-protocols.md    # 核心模块 1
+    03-routing-system.md       # 核心模块 2
+    04-nat-traversal.md        # 核心模块 3
+```
+
+#### 推荐规则
+
+1. **每个项目一个目录**，不要把不同项目混在一起
+2. **建议项目目录内提供 `README.md`**，作为该项目的目录页 / 导航页
+3. **建议每篇项目文档带编号**，如：
+   - `01-project-overview.md`
+   - `02-architecture.md`
+   - `03-api-design.md`
+   - `04-deployment.md`
+4. 如果某篇文档还要继续细分，可使用更细粒度编号，例如：
+   - `01-01-overview.md`
+   - `01-02-goals.md`
+   - `02-01-backend-architecture.md`
+5. 编号的目的不是形式化，而是为了：
+   - 建立阅读顺序
+   - 形成目录感
+   - 避免项目文档无序堆放
+
+> ✅ 推荐：`projects/xxx/01-xx-xxx.md`  
+> ✅ 推荐：`projects/xxx/README.md` 作为导航页  
+> ❌ 不推荐：把项目的所有分析、日志、设计稿都散乱放在 `projects/` 根目录
+
+---
+
+## README / 目录页规范（项目类强烈推荐）
+
+对于项目目录，推荐提供一个 `README.md` 或等价目录页，至少包含：
+
+1. **项目一句话摘要**
+2. **项目核心目标 / 核心价值**
+3. **目录索引**（每篇文档做什么）
+4. **推荐阅读顺序**
+
+### 示例
+
+```markdown
+# EasyTier 项目文档
+
+> [!abstract] 概述
+> EasyTier 是一个 P2P VPN / 异地组网项目，核心目标是实现稳定的内网穿透和虚拟组网。
+
+## 文档目录
+
+- [[01-project-overview|01 项目概览]] - 说明项目目标、定位、组件组成
+- [[02-network-protocols|02 网络协议]] - 梳理协议层设计
+- [[03-routing-system|03 路由系统]] - 解释路径选择与流量转发
+
+## 推荐阅读顺序
+
+1. 项目概览
+2. 架构总览
+3. 核心模块拆解
+```
+
+> 项目类知识如果没有目录感，后续检索和维护都会越来越乱。  
+> 所以**优先建立 README 导航页 + 编号文档体系**。
 
 ---
 
@@ -79,6 +154,7 @@
 3. **命名** — 语义化英文文件名
 4. **格式** — 必须包含概述 Callout + 相关笔记章节
 5. **路径** — 只在上述 8 个分区目录中创建
+6. **项目类内容优先目录化** — 新项目先建子目录，再考虑写 `README.md` 和编号文档
 
 ### 更新现有文件
 
@@ -93,6 +169,8 @@
 - ❌ 创建与已有文件主题重复的新文件
 - ❌ 删除或覆盖 `cheatsheet/api-keys.md` 中的密钥
 - ❌ 在非 `journal/` 目录写日志类内容
+- ❌ 把同一项目的大量文档无序散落到 `projects/` 根目录
+- ❌ 项目类文档完全没有导航页、编号、摘要，导致目录失控
 - ❌ content 中缺少概述 Callout（`> [!abstract] 概述`）
 - ❌ content 中缺少 `## 相关笔记` 章节
 - ❌ 使用 Markdown 链接替代 Wikilinks 引用本库内文件
@@ -115,14 +193,12 @@
 |------|------|
 | 查找 Docker 笔记 | `note_index_tree` → tech/ → `[[docker-guide]]` |
 | 新增 MCP 内容 | 更新 `ai/mcp-development.md`，不要新建文件 |
-| 记录新项目 | `projects/<project-name>/` 新建子目录 |
+| 记录新项目 | `projects/<project-name>/` 新建子目录，并优先创建 `README.md` |
 | 添加 API 密钥 | 追加到 `cheatsheet/api-keys.md` |
 | 写工作日志 | `journal/YYYY-MM/YYYY-MM-DD-主题.md` |
 | 记录新工具 | 判断属于 `tech/` 还是 `cheatsheet/`，追加或新建 |
 
 ----
-
-
 
 # Fromsko 知识库
 
@@ -163,7 +239,7 @@
 
 | 文件 | 内容 |
 |------|------|
-| `easytier/` | EasyTier P2P VPN 项目深度学习（20篇） |
+| `easytier/` | EasyTier P2P VPN 项目深度学习（目录化、编号化组织） |
 | [[release-troubleshoot]] | CMP GitHub Actions 发布排障 |
 
 ---
@@ -216,80 +292,27 @@
 
 ---
 
-## MCP 工具调用示例
+## MCP 工具调用速记
 
-> 本节面向 LLM，提供各工具的正确调用示例。参数校验由程序自动完成，以下仅展示用法。
+- `note_index_tree`：查看文件树与标签
+- `query_note`：按 `tags` / `exact_name` / `keyword` 搜索
+- `read_note`：按相对路径读取全文
+- `write_note`：写入或更新笔记
+- `delete_note`：删除笔记
 
-### query_note — 搜索笔记
-
-支持三种查询模式混合使用，**至少提供一个参数**。
-
-```json
-✅ 按标签搜索（多标签取交集）：
-{"tags": ["docker", "linux"]}
-
-✅ 精确文件名匹配（不含 .md 后缀）：
-{"exact_name": "docker-guide"}
-
-✅ 模糊关键词搜索（匹配文件名、别名、标签、路径）：
-{"keyword": "Docker"}
-
-✅ 混合查询（标签 + 关键词）：
-{"tags": ["rust"], "keyword": "mcp"}
-```
-
-### read_note — 读取笔记完整内容
-
-传入笔记的相对路径（从 `query_note` 或 `note_index_tree` 的返回结果中获取）。
+### 最小示例
 
 ```json
-✅ 读取指定笔记：
+{"tags": ["docker"]}
 {"path": "tech/docker-guide.md"}
-
-✅ 读取子目录下的笔记：
-{"path": "projects/easytier/01-project-overview.md"}
-```
-
-### write_note — 写入笔记
-
-所有 6 个参数**全部必填**。Frontmatter 由服务自动生成，content 中不要包含 frontmatter。
-
-```json
-✅ 创建新笔记：
-{
-  "directory": "tech",
-  "filename": "nginx-guide",
-  "tags": ["nginx", "deploy", "linux"],
-  "aliases": ["Nginx 配置指南"],
-  "status": "active",
-  "content": "> [!abstract] 概述\n> Nginx 反向代理与负载均衡配置指南。\n\n## 基础配置\n\n```nginx\nserver {\n    listen 80;\n    server_name example.com;\n}\n```\n\n## 相关笔记\n\n- [[docker-guide]]\n- [[server-deploy]]"
-}
-
-✅ 创建子目录笔记：
-{
-  "directory": "journal/2026-03",
-  "filename": "26-obsidian-refactor",
-  "tags": ["journal", "mcp", "rust"],
-  "aliases": ["Obsidian MCP 重构日志"],
-  "status": "active",
-  "content": "> [!abstract] 概述\n> 完成了 Obsidian MCP 服务的模块化重构。\n\n## 完成事项\n\n- 拆分为 7 个模块\n- 40 个测试全部通过\n\n## 相关笔记\n\n- [[mcp-development]]"
-}
-
-✅ 追加到已有笔记（文件已存在时自动追加，updated 日期自动更新）：
-{
-  "directory": "ai",
-  "filename": "mcp-development",
-  "tags": ["mcp", "rust"],
-  "aliases": ["MCP 开发指南"],
-  "status": "active",
-  "content": "## 新增章节\n\n这里是追加的内容。"
-}
+{"directory": "projects/easytier", "filename": "01-project-overview", "tags": ["project"], "aliases": ["项目概览"], "status": "active", "content": "> [!abstract] 概述\n> 内容\n\n## 相关笔记\n\n- [[README]]"}
 ```
 
 ### 典型工作流
 
-1. 首次使用 → 调用 `write_note_tips` 查阅本规范
-2. 了解库结构 → 调用 `note_index_tree` 查看文件树和标签
-3. 查找笔记 → 调用 `query_note` 搜索是否已有同主题文件
-4. 阅读笔记 → 调用 `read_note` 读取笔记完整内容
-5. 写入笔记 → 调用 `write_note` 创建或追加内容
+1. 先看 `write_note_tips`
+2. 再用 `note_index_tree` 看结构
+3. 用 `query_note` 查重
+4. 用 `read_note` 阅读已有内容
+5. 项目类优先创建项目目录、README 和编号文档
+6. 最后用 `write_note` 写入
