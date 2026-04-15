@@ -3,7 +3,7 @@
 project: Obsidian Rust MCP
 description: High-performance MCP server for Obsidian knowledge base management
 language: Rust
-version: 0.1.3
+version: 0.1.4
 author: Fromsko
 email: fromsko@example.com
 license: MIT

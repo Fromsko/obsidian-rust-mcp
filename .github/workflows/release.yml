@@ -167,7 +167,8 @@ jobs:
             - `note_index_tree` - 获取完整文件树和标签索引
             - `query_note` - 搜索笔记（支持标签、文件名、关键词）
             - `read_note` - 读取笔记完整内容
-            - `write_note` - 创建或追加笔记
+            - `write_note` - 创建或更新笔记（支持追加/覆盖模式）
+            - `delete_note` - 删除笔记
             - `write_note_tips` - 查看写入规范文档
           files: release/*
           draft: false
