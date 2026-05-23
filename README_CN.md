@@ -118,7 +118,7 @@ MCP 仅暴露 **两个工具**，减少客户端 token 占用：
 | `obsidian.index` | 全库文件树 + 标签统计（高级） |
 | `obsidian.delete` | 删除笔记（见 `help` + `detail`） |
 
-架构说明见 [arch.md](./arch.md)，Agent 技能见 `.cursor/skills/obsidian-vault-mcp/`。
+架构说明见 [docs/arch.md](./docs/arch.md)，路线图见 [docs/todo.md](./docs/todo.md)，Agent 技能见 `.cursor/skills/obsidian-vault-mcp/`。
 
 ## 配置
 
@@ -194,8 +194,8 @@ tests/
   service_integration.rs
   mcp_stdio.rs
   registry.rs
-arch.md
-todo.md
+docs/arch.md
+docs/todo.md
 ```
 
 ## 测试

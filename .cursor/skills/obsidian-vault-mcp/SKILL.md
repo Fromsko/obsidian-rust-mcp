@@ -138,4 +138,4 @@ Shape (always):
 ## More detail
 
 - Full parameter schemas and tiers: [reference.md](reference.md)
-- Architecture: [../../../arch.md](../../../arch.md)
+- Architecture: [../../../docs/arch.md](../../../docs/arch.md)

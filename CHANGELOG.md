@@ -13,7 +13,7 @@
 - `obsidian.search` supports `include_index`.
 - `VaultBackend` trait and `LocalVault` for future cloud storage.
 - Library crate + integration tests (`tests/service_integration.rs`, `tests/mcp_stdio.rs`).
-- `arch.md`, Agent skill `.cursor/skills/obsidian-vault-mcp/`.
+- `docs/arch.md`, `docs/todo.md`, Agent skill `.cursor/skills/obsidian-vault-mcp/`.
 
 ### Changed
 

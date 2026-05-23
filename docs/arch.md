@@ -75,5 +75,5 @@ Server deserializes `args` per command and returns text `CallToolResult`.
 ## Testing
 
 - Unit: `command::help`, `command::dispatch` validation, `service` with temp dirs.
-- Integration: `tests/command_flow.rs` — full guide/search/write/read without MCP.
+- Integration: `tests/service_integration.rs` — full guide/search/write/read without MCP.
 - MCP: `tests/mcp_stdio.rs` — child process, `list_tools` == 2, `executeCommand` round-trip.

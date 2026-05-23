@@ -116,7 +116,7 @@ Typical flow: **`help` → `obsidian.guide` → `obsidian.search` → `obsidian.
 | `obsidian.index` | Full file tree + tag stats (advanced) |
 | `obsidian.delete` | Delete note (see `help` with `detail`) |
 
-See [arch.md](./arch.md) for architecture and [todo.md](./todo.md) for roadmap.
+See [docs/arch.md](./docs/arch.md) for architecture and [docs/todo.md](./docs/todo.md) for roadmap.
 
 ## Configuration
 
@@ -192,8 +192,8 @@ tests/
   service_integration.rs
   mcp_stdio.rs
   registry.rs
-arch.md
-todo.md
+docs/arch.md
+docs/todo.md
 ```
 
 ## Testing

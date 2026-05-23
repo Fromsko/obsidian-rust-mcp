@@ -2,8 +2,8 @@
 
 ## Documentation
 
-- [x] `arch.md` — layer diagram, commands, contracts
-- [x] `todo.md` — this file
+- [x] `docs/arch.md` — layer diagram, commands, contracts
+- [x] `docs/todo.md` — this file
 - [x] `README.md` — help + executeCommand usage
 
 ## Core
