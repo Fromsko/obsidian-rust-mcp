@@ -93,6 +93,9 @@ pub fn validate_read_path(path: &str) -> Result<String, String> {
     if path.contains("..") {
         return Err("路径不能包含 ..".into());
     }
+    if !path.ends_with(".md") {
+        return Err("路径必须以 .md 结尾".into());
+    }
 
     Ok(path)
 }

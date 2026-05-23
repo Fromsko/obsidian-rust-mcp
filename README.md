@@ -3,7 +3,7 @@
 project: Obsidian Rust MCP
 description: High-performance MCP server for Obsidian knowledge base management
 language: Rust
-version: 0.1.5
+version: 0.3.0
 author: Fromsko
 email: fromsko@example.com
 license: MIT
@@ -47,78 +47,76 @@ A high-performance MCP (Model Context Protocol) server for Obsidian knowledge ba
 cargo build --release
 ```
 
-## Usage
+## Migration (v0.3 breaking change)
 
-The server provides the following MCP tools:
+The MCP surface exposes **only** `help` and `executeCommand`. Legacy flat tools are removed:
 
-### `note_index_tree`
-Get the complete file tree and all available tags in your vault.
+| Legacy tool | v0.3 replacement |
+|-------------|------------------|
+| `write_note_tips` | `executeCommand` → `obsidian.guide` |
+| `query_note` | `executeCommand` → `obsidian.search` |
+| `write_note` | `executeCommand` → `obsidian.write` |
+| `read_note` | `executeCommand` → `obsidian.read` |
+| `note_index_tree` | `executeCommand` → `obsidian.index` |
+| `delete_note` | `executeCommand` → `obsidian.delete` |
 
-### `query_note`
-Search notes using:
-- **Tags**: Filter by one or more tags (intersection)
-- **Exact name**: Match exact filename (without .md)
-- **Keyword**: Fuzzy search across filenames, aliases, and tags
+## Usage (CLI model — v0.3)
 
-Example:
+The MCP server exposes **only two tools** to save client tokens:
+
+| Tool | Purpose |
+|------|---------|
+| `help` | Command manual (short catalog or detailed usage) |
+| `executeCommand` | Run a registered `obsidian.*` command |
+
+Typical flow: **`help` → `obsidian.guide` → `obsidian.search` → `obsidian.write`**
+
+### `help`
+
 ```json
-{"tags": ["docker"]}
-{"exact_name": "docker-guide"}
-{"keyword": "Docker"}
-{"tags": ["rust"], "keyword": "mcp"}
+{}
 ```
 
-### `read_note`
-Read the complete content of a note by its relative path.
-
-Example:
 ```json
-{"path": "tech/docker-guide.md"}
+{ "topic": "obsidian.write", "detail": true }
 ```
 
-### `write_note`
-Create or update notes with automatic frontmatter generation. Supports two modes:
-- **Append mode** (default): Adds content to existing file
-- **Overwrite mode** (`append: false`): Replaces entire file
+### `executeCommand`
 
-Supports subdirectories (e.g., `projects/easytier`, `journal/2026-03`, up to 3 levels deep).
-
-Append mode example:
 ```json
 {
-  "directory": "tech",
-  "filename": "nginx-guide",
-  "tags": ["nginx"],
-  "aliases": ["Nginx Guide"],
-  "status": "active",
-  "content": "> [!abstract] Overview\n> Content\n\n## Related Notes\n\n- [[docker-guide]]",
-  "append": true
+  "command": "obsidian.search",
+  "args": { "tags": ["docker"], "keyword": "nginx" }
 }
 ```
 
-Overwrite mode example:
 ```json
 {
-  "directory": "tech",
-  "filename": "nginx-guide",
-  "tags": ["nginx"],
-  "aliases": ["Nginx Guide"],
-  "status": "active",
-  "content": "> [!abstract] Overview\n> New content\n\n## Related Notes\n\n- [[docker-guide]]",
-  "append": false
+  "command": "obsidian.write",
+  "args": {
+    "directory": "tech",
+    "filename": "nginx-guide",
+    "tags": ["nginx"],
+    "aliases": ["Nginx Guide"],
+    "status": "active",
+    "content": "markdown body",
+    "append": true
+  }
 }
 ```
 
-### `delete_note`
-Delete a note from the vault. Use with caution - this operation is irreversible.
+### Registered commands (`obsidian.*`)
 
-Example:
-```json
-{"path": "tech/docker-guide.md"}
-```
+| Command | Description |
+|---------|-------------|
+| `obsidian.guide` | Vault writing guidelines (call before first write) |
+| `obsidian.search` | Search by tags / keyword / exact name (`include_index` optional) |
+| `obsidian.write` | Create or append note (`append` default `true`) |
+| `obsidian.read` | Read note by path (advanced) |
+| `obsidian.index` | Full file tree + tag stats (advanced) |
+| `obsidian.delete` | Delete note (see `help` with `detail`) |
 
-### `write_note_tips`
-Get the complete writing guidelines for the vault (directory structure, naming conventions, frontmatter format, etc.).
+See [arch.md](./arch.md) for architecture and [todo.md](./todo.md) for roadmap.
 
 ## Configuration
 
@@ -178,20 +176,30 @@ Notes can be organized in the following top-level directories (subdirectories su
 
 ```
 src/
-  main.rs          # Entry point, tracing init, serve()
-  config.rs        # Constants & vault root config
-  types.rs         # Request/response types with schemars
-  server.rs        # MCP tool handlers
-  validation.rs    # Input validation (directory, filename, status, path)
-  frontmatter.rs   # YAML frontmatter parsing & generation
-  index.rs         # Vault index builder
-  file_tree.rs     # File tree visualization
+  main.rs           # Binary entry
+  lib.rs
+  server.rs         # MCP: help + executeCommand
+  command/          # Registry, help renderer, dispatch
+  service/          # Vault operations
+  store/            # LocalVault + VaultBackend trait
+  config.rs
+  types.rs
+  validation.rs
+  frontmatter.rs
+  index.rs
+  file_tree.rs
+tests/
+  service_integration.rs
+  mcp_stdio.rs
+  registry.rs
+arch.md
+todo.md
 ```
 
 ## Testing
 
 ```bash
-cargo test  # 40 unit tests
+cargo test   # unit + integration + MCP stdio
 ```
 
 ## Screenshots

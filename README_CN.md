@@ -3,7 +3,7 @@
 project: Obsidian Rust MCP
 description: 基于 Rust 构建的高性能 Obsidian 知识库 MCP 服务器
 language: Rust
-version: 0.1.5
+version: 0.3.0
 author: Fromsko
 email: fromsko@example.com
 license: MIT
@@ -47,78 +47,78 @@ documentation: https://github.com/fromsko/obsidian-rust-mcp/blob/main/README_CN.
 cargo build --release
 ```
 
-## 使用方法
+## 迁移说明（v0.3 Breaking Change）
 
-服务器提供以下 MCP 工具：
+**MCP 对外仅保留两个工具**：`help`、`executeCommand`。
 
-### `note_index_tree`
-获取知识库的完整文件树和所有可用标签。
+以下旧工具名已**移除**，请勿再调用：
 
-### `query_note`
-使用以下方式搜索笔记：
-- **标签**: 按一个或多个标签过滤（取交集）
-- **精确文件名**: 匹配精确的文件名（不含 .md）
-- **关键词**: 在文件名、别名和标签中模糊搜索
+| 旧工具（v0.2 及以前） | v0.3 替代方式 |
+|----------------------|---------------|
+| `write_note_tips` | `executeCommand` → `obsidian.guide` |
+| `query_note` | `executeCommand` → `obsidian.search` |
+| `write_note` | `executeCommand` → `obsidian.write` |
+| `read_note` | `executeCommand` → `obsidian.read` |
+| `note_index_tree` | `executeCommand` → `obsidian.index` |
+| `delete_note` | `executeCommand` → `obsidian.delete` |
 
-示例：
+典型流程：**`help` → `obsidian.guide` → `obsidian.search` →（可选 `obsidian.read`）→ `obsidian.write`**
+
+## 使用方法（CLI 模型 — v0.3）
+
+MCP 仅暴露 **两个工具**，减少客户端 token 占用：
+
+| 工具 | 作用 |
+|------|------|
+| `help` | 命令手册（短目录或详细说明） |
+| `executeCommand` | 执行已注册的 `obsidian.*` 命令 |
+
+### `help`
+
 ```json
-{"tags": ["docker"]}
-{"exact_name": "docker-guide"}
-{"keyword": "Docker"}
-{"tags": ["rust"], "keyword": "mcp"}
+{}
 ```
 
-### `read_note`
-通过相对路径读取笔记的完整内容。
-
-示例：
 ```json
-{"path": "tech/docker-guide.md"}
+{ "topic": "obsidian.write", "detail": true }
 ```
 
-### `write_note`
-创建或更新笔记，自动生成 Frontmatter。支持两种模式：
-- **追加模式**（默认）：向现有文件添加内容
-- **覆盖模式**（`append: false`）：替换整个文件
+### `executeCommand`
 
-支持子目录（如 `projects/easytier`、`journal/2026-03`，最多 3 层）。
-
-追加模式示例：
 ```json
 {
-  "directory": "tech",
-  "filename": "nginx-guide",
-  "tags": ["nginx"],
-  "aliases": ["Nginx 指南"],
-  "status": "active",
-  "content": "> [!abstract] 概述\n> 内容\n\n## 相关笔记\n\n- [[docker-guide]]",
-  "append": true
+  "command": "obsidian.search",
+  "args": { "tags": ["docker"], "keyword": "nginx" }
 }
 ```
 
-覆盖模式示例：
 ```json
 {
-  "directory": "tech",
-  "filename": "nginx-guide",
-  "tags": ["nginx"],
-  "aliases": ["Nginx 指南"],
-  "status": "active",
-  "content": "> [!abstract] 概述\n> 新内容\n\n## 相关笔记\n\n- [[docker-guide]]",
-  "append": false
+  "command": "obsidian.write",
+  "args": {
+    "directory": "tech",
+    "filename": "nginx-guide",
+    "tags": ["nginx"],
+    "aliases": ["Nginx 指南"],
+    "status": "active",
+    "content": "Markdown 正文（不含 frontmatter）",
+    "append": true
+  }
 }
 ```
 
-### `delete_note`
-从知识库中删除笔记。请谨慎使用，此操作不可恢复。
+### 已注册命令（`obsidian.*`）
 
-示例：
-```json
-{"path": "tech/docker-guide.md"}
-```
+| 命令 | 说明 |
+|------|------|
+| `obsidian.guide` | 知识库写入规范（首次写入前建议执行） |
+| `obsidian.search` | 按标签 / 关键词 / 精确名搜索（可选 `include_index`） |
+| `obsidian.write` | 创建或追加笔记（`append` 默认 `true`） |
+| `obsidian.read` | 按路径读取全文（高级） |
+| `obsidian.index` | 全库文件树 + 标签统计（高级） |
+| `obsidian.delete` | 删除笔记（见 `help` + `detail`） |
 
-### `write_note_tips`
-获取知识库的完整写入规范（目录结构、命名规范、Frontmatter 格式等）。
+架构说明见 [arch.md](./arch.md)，Agent 技能见 `.cursor/skills/obsidian-vault-mcp/`。
 
 ## 配置
 
@@ -178,20 +178,30 @@ pub const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 
 ```
 src/
-  main.rs          # 入口，tracing 初始化，serve()
-  config.rs        # 常量与知识库根目录配置
-  types.rs         # 请求/响应类型（schemars 描述）
-  server.rs        # MCP 工具处理器
-  validation.rs    # 输入校验（目录、文件名、状态、路径）
-  frontmatter.rs   # YAML Frontmatter 解析与生成
-  index.rs         # 知识库索引构建
-  file_tree.rs     # 文件树可视化
+  main.rs           # 二进制入口
+  lib.rs
+  server.rs         # MCP：help + executeCommand
+  command/          # 注册表、help 渲染、分发
+  service/          # 知识库业务逻辑
+  store/            # LocalVault + VaultBackend（预留云端）
+  config.rs
+  types.rs
+  validation.rs
+  frontmatter.rs
+  index.rs
+  file_tree.rs
+tests/
+  service_integration.rs
+  mcp_stdio.rs
+  registry.rs
+arch.md
+todo.md
 ```
 
 ## 测试
 
 ```bash
-cargo test  # 40 个单元测试
+cargo test   # 单元 + 集成 + MCP stdio
 ```
 
 ## 截图

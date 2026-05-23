@@ -1,15 +1,6 @@
-mod config;
-mod file_tree;
-mod frontmatter;
-mod index;
-mod server;
-mod types;
-mod validation;
-
 use anyhow::Result;
-use rmcp::transport::io::stdio;
-use rmcp::ServiceExt;
-use server::ObsidianMcp;
+use obsidian_mcp::ObsidianMcp;
+use rmcp::{transport::stdio, ServiceExt};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -20,9 +11,11 @@ async fn main() -> Result<()> {
         .init();
 
     tracing::info!(
-        "Obsidian MCP Server starting, vault: {}",
-        config::get_vault_root()
+        "Obsidian MCP v{} starting, vault: {}",
+        env!("CARGO_PKG_VERSION"),
+        obsidian_mcp::config::get_vault_root()
     );
+
     let service = ObsidianMcp::new().serve(stdio()).await?;
     service.waiting().await?;
     Ok(())

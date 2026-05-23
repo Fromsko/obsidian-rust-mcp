@@ -1,6 +1,7 @@
 use std::env;
 
-pub const VAULT_ROOT: &str = r"D:\notes\Fromsko";
+/// Fallback when `OBSIDIAN_VAULT_ROOT` is unset (override via env in production).
+pub const VAULT_ROOT: &str = ".";
 
 pub const VALID_DIRS: &[&str] = &[
     "tech",
