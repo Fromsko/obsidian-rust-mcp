@@ -10,10 +10,16 @@ async fn main() -> Result<()> {
         .with_ansi(false)
         .init();
 
+    let config = obsidian_mcp::config::AppConfig::load().unwrap_or_else(|e| {
+        tracing::warn!("config load failed ({e}), using defaults");
+        obsidian_mcp::config::AppConfig::default()
+    });
+
     tracing::info!(
-        "Obsidian MCP v{} starting, vault: {}",
+        "Obsidian MCP v{} starting, vault: {}, backend: {:?}",
         env!("CARGO_PKG_VERSION"),
-        obsidian_mcp::config::get_vault_root()
+        config.vault_root.display(),
+        config.backend
     );
 
     let service = ObsidianMcp::new().serve(stdio()).await?;

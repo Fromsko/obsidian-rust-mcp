@@ -2,7 +2,7 @@
 
 use obsidian_mcp::command::dispatch;
 use obsidian_mcp::service::ObsidianService;
-use obsidian_mcp::store::VaultHandle;
+use obsidian_mcp::vault::VaultHandle;
 use serde_json::json;
 use std::fs;
 use tempfile::TempDir;
@@ -158,6 +158,55 @@ async fn delete_removes_file() {
     .unwrap();
     assert!(out.contains("已删除"));
     assert!(!path.exists());
+}
+
+#[tokio::test]
+async fn semantic_search_finds_body_match() {
+    let (_dir, svc) = setup_vault();
+    fs::write(
+        _dir.path().join("tech/nginx-proxy.md"),
+        "---\ntags:\n  - nginx\n---\n# Nginx\n\nReverse proxy configuration for docker.",
+    )
+    .unwrap();
+
+    let out = dispatch(
+        &svc,
+        "obsidian.semantic_search",
+        json!({ "query": "reverse proxy docker", "limit": 5 }),
+    )
+    .await
+    .unwrap();
+    assert!(out.contains("nginx-proxy"));
+}
+
+#[tokio::test]
+async fn write_deep_nested_directory() {
+    let (_dir, svc) = setup_vault();
+    let write_out = dispatch(
+        &svc,
+        "obsidian.write",
+        json!({
+            "directory": "projects/easytier/docs/api",
+            "filename": "endpoints",
+            "tags": ["project"],
+            "aliases": [],
+            "status": "active",
+            "content": "> [!abstract] 概述\n\nAPI endpoints.\n\n## 相关笔记\n",
+            "append": false
+        }),
+    )
+    .await
+    .unwrap();
+    assert!(write_out.contains("已创建"));
+
+    let body = dispatch(
+        &svc,
+        "obsidian.read",
+        json!({ "path": "projects/easytier/docs/api/endpoints.md" }),
+    )
+    .await
+    .unwrap();
+    assert!(body.contains("API endpoints"));
 }
 
 #[tokio::test]

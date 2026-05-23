@@ -20,7 +20,7 @@
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `directory` | `string` | yes | top-level: tech, ai, projects, methods, career, ideas, cheatsheet, journal; max 3 levels |
+| `directory` | `string` | yes | top-level: tech, ai, projects, …; nested subdirs allowed at any depth |
 | `filename` | `string` | yes | lowercase ASCII + digits + hyphens, no `.md` |
 | `tags` | `string[]` | no | default `[]` |
 | `aliases` | `string[]` | no | default `[]` |

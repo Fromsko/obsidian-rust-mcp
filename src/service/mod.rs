@@ -3,13 +3,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, RwLock};
 
-use crate::config::WRITE_NOTE_TIPS;
-use crate::file_tree;
-use crate::frontmatter::{generate_frontmatter, update_frontmatter_date};
-use crate::index;
-use crate::store::{VaultBackend, VaultHandle};
-use crate::types::{SearchParams, VaultIndex, WriteNoteParams};
-use crate::validation;
+use crate::config::{AppConfig, WRITE_NOTE_TIPS};
+use crate::note::{
+    build_file_tree, build_index, generate_frontmatter, semantic_search, update_frontmatter_date,
+};
+use crate::types::{SearchParams, SemanticSearchParams, VaultIndex, WriteNoteParams};
+use crate::validation::Validator;
+use crate::vault::{VaultError, VaultHandle};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ServiceError {
@@ -29,26 +29,52 @@ impl ServiceError {
     }
 }
 
+impl From<VaultError> for ServiceError {
+    fn from(e: VaultError) -> Self {
+        ServiceError::internal(e.to_string())
+    }
+}
+
 #[derive(Clone)]
 pub struct ObsidianService {
+    config: Arc<AppConfig>,
+    validator: Validator,
     vault: VaultHandle,
     idx: Arc<RwLock<VaultIndex>>,
 }
 
 impl ObsidianService {
     pub fn new() -> Self {
-        let vault = VaultHandle::from_env();
-        let idx = index::build_index(vault.root());
+        let config = AppConfig::load().unwrap_or_else(|e| {
+            tracing::warn!("config load failed ({e}), using defaults");
+            AppConfig::default()
+        });
+        Self::from_config(config)
+    }
+
+    fn from_config(config: AppConfig) -> Self {
+        let validator = Validator::from_config(&config);
+        let vault = VaultHandle::open(&config).unwrap_or_else(|e| {
+            tracing::warn!("vault open failed ({e}), falling back to local");
+            VaultHandle::from_path(config.vault_root.clone())
+        });
+        let idx = build_index(vault.root());
         Self {
+            config: Arc::new(config),
+            validator,
             vault,
             idx: Arc::new(RwLock::new(idx)),
         }
     }
 
-    /// Service bound to an existing vault handle (tests, custom roots).
+    /// Service bound to a local vault path (tests).
     pub fn with_vault(vault: VaultHandle) -> Self {
-        let idx = index::build_index(vault.root());
+        let config = AppConfig::for_test(vault.root().to_path_buf(), None);
+        let validator = Validator::from_config(&config);
+        let idx = build_index(vault.root());
         Self {
+            config: Arc::new(config),
+            validator,
             vault,
             idx: Arc::new(RwLock::new(idx)),
         }
@@ -58,8 +84,12 @@ impl ObsidianService {
         &self.vault
     }
 
+    pub fn config(&self) -> &AppConfig {
+        &self.config
+    }
+
     fn rebuild_index(&self) {
-        let new_idx = index::build_index(self.vault.root());
+        let new_idx = build_index(self.vault.root());
         if let Ok(mut idx) = self.idx.write() {
             *idx = new_idx;
         }
@@ -90,7 +120,7 @@ impl ObsidianService {
     }
 
     fn format_index_body(&self) -> Result<String, ServiceError> {
-        let tree = file_tree::build_file_tree(self.vault.root());
+        let tree = build_file_tree(self.vault.root());
         let idx = self
             .idx
             .read()
@@ -233,37 +263,78 @@ impl ObsidianService {
         Ok(output)
     }
 
+    pub fn semantic_search(&self, params: SemanticSearchParams) -> Result<String, ServiceError> {
+        let query = params.query.trim();
+        if query.is_empty() {
+            return Err(ServiceError::invalid_params("query 不能为空"));
+        }
+
+        self.rebuild_index();
+        let limit = params.limit.unwrap_or(10).clamp(1, 50);
+
+        let idx = self
+            .idx
+            .read()
+            .map_err(|e| ServiceError::internal(format!("lock error: {e}")))?;
+
+        let hits = semantic_search(&idx, query, limit);
+        if hits.is_empty() {
+            return Ok(format!("语义搜索「{query}」无匹配结果。"));
+        }
+
+        let mut output = format!("语义搜索「{query}」找到 {} 篇笔记：\n\n", hits.len());
+        output.push_str("| 分数 | 文件 | 路径 | 标签 | 状态 |\n");
+        output.push_str("|------|------|------|------|------|\n");
+
+        for hit in hits {
+            let e = &idx.entries[hit.index];
+            output.push_str(&format!(
+                "| {:.1} | `{}` | `{}` | {} | {} |\n",
+                hit.score,
+                e.title,
+                e.rel_path,
+                e.tags.join(", "),
+                e.status,
+            ));
+        }
+
+        Ok(output)
+    }
+
     pub async fn read(&self, path: &str) -> Result<String, ServiceError> {
-        let rel_path = validation::validate_read_path(path)
+        let rel_path = self
+            .validator
+            .validate_read_path(path)
             .map_err(ServiceError::invalid_params)?;
 
-        let file_path = self.vault.join(&rel_path);
-        if !file_path.exists() {
+        if !self.vault.exists(&rel_path) {
             return Err(ServiceError::invalid_params(format!(
                 "文件不存在: {rel_path}"
             )));
         }
 
-        self.ensure_under_vault(&file_path)?;
+        self.ensure_under_vault(&self.vault.join(&rel_path))?;
 
-        tokio::fs::read_to_string(&file_path)
-            .await
-            .map_err(|e| ServiceError::internal(format!("读取文件失败: {e}")))
+        self.vault.read_text(&rel_path).await.map_err(Into::into)
     }
 
     pub async fn write(&self, params: WriteNoteParams) -> Result<String, ServiceError> {
-        let dir = validation::validate_directory(&params.directory)
+        let dir = self
+            .validator
+            .validate_directory(&params.directory)
             .map_err(ServiceError::invalid_params)?;
-        let filename = validation::validate_filename(&params.filename)
+        let filename = self
+            .validator
+            .validate_filename(&params.filename)
             .map_err(ServiceError::invalid_params)?;
-        validation::validate_status(&params.status).map_err(ServiceError::invalid_params)?;
+        self.validator
+            .validate_status(&params.status)
+            .map_err(ServiceError::invalid_params)?;
 
-        let target_dir = self.vault.join(&dir);
-        tokio::fs::create_dir_all(&target_dir)
-            .await
-            .map_err(|e| ServiceError::internal(format!("创建目录失败: {e}")))?;
+        self.vault.ensure_dir(&dir).await?;
 
-        let file_path = target_dir.join(format!("{filename}.md"));
+        let rel_path = format!("{dir}/{filename}.md");
+        let file_path = self.vault.join(&rel_path);
 
         if file_path.exists() {
             self.ensure_under_vault(&file_path)?;
@@ -278,9 +349,7 @@ impl ObsidianService {
                     generate_frontmatter(&params.tags, &params.aliases, &params.status, &today);
                 let full_content = format!("{}{}", frontmatter, params.content);
 
-                tokio::fs::write(&file_path, &full_content)
-                    .await
-                    .map_err(|e| ServiceError::internal(format!("写入文件失败: {e}")))?;
+                self.vault.write_text(&rel_path, &full_content).await?;
 
                 self.rebuild_index();
 
@@ -290,9 +359,7 @@ impl ObsidianService {
                 ));
             }
 
-            let existing = tokio::fs::read_to_string(&file_path)
-                .await
-                .map_err(|e| ServiceError::internal(format!("读取文件失败: {e}")))?;
+            let existing = self.vault.read_text(&rel_path).await?;
 
             let updated_content = if existing.starts_with("---") {
                 if let Some(end_pos) = existing[3..].find("\n---") {
@@ -307,9 +374,7 @@ impl ObsidianService {
                 format!("{existing}\n\n{}", params.content)
             };
 
-            tokio::fs::write(&file_path, &updated_content)
-                .await
-                .map_err(|e| ServiceError::internal(format!("写入文件失败: {e}")))?;
+            self.vault.write_text(&rel_path, &updated_content).await?;
 
             self.rebuild_index();
 
@@ -323,9 +388,7 @@ impl ObsidianService {
             generate_frontmatter(&params.tags, &params.aliases, &params.status, &today);
         let full_content = format!("{}{}", frontmatter, params.content);
 
-        tokio::fs::write(&file_path, &full_content)
-            .await
-            .map_err(|e| ServiceError::internal(format!("写入文件失败: {e}")))?;
+        self.vault.write_text(&rel_path, &full_content).await?;
 
         self.rebuild_index();
 
@@ -333,21 +396,20 @@ impl ObsidianService {
     }
 
     pub async fn delete(&self, path: &str) -> Result<String, ServiceError> {
-        let rel_path = validation::validate_read_path(path)
+        let rel_path = self
+            .validator
+            .validate_read_path(path)
             .map_err(ServiceError::invalid_params)?;
 
-        let file_path = self.vault.join(&rel_path);
-        if !file_path.exists() {
+        if !self.vault.exists(&rel_path) {
             return Err(ServiceError::invalid_params(format!(
                 "文件不存在: {rel_path}"
             )));
         }
 
-        self.ensure_under_vault(&file_path)?;
+        self.ensure_under_vault(&self.vault.join(&rel_path))?;
 
-        tokio::fs::remove_file(&file_path)
-            .await
-            .map_err(|e| ServiceError::internal(format!("删除文件失败: {e}")))?;
+        self.vault.delete_file(&rel_path).await?;
 
         self.rebuild_index();
 

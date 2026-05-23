@@ -1,6 +1,6 @@
 use crate::command::registry::{find_command, suggest_command};
 use crate::service::{ObsidianService, ServiceError};
-use crate::types::{PathParams, SearchParams, WriteNoteParams};
+use crate::types::{PathParams, SearchParams, SemanticSearchParams, WriteNoteParams};
 
 #[derive(Debug, thiserror::Error)]
 pub enum DispatchError {
@@ -58,6 +58,10 @@ pub async fn dispatch(
             let p: PathParams = parse_args(command, args)?;
             service.delete(&p.path).await.map_err(DispatchError::from)
         }
+        "obsidian.semantic_search" => {
+            let p: SemanticSearchParams = parse_args(command, args)?;
+            service.semantic_search(p).map_err(DispatchError::from)
+        }
         _ => Err(DispatchError::UnknownCommand(format!("未实现: {command}"))),
     }
 }
@@ -97,7 +101,7 @@ impl From<DispatchError> for String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::store::VaultHandle;
+    use crate::vault::VaultHandle;
     use std::fs;
     use tempfile::tempdir;
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0] - 2026-05-22
+
+### Added
+
+- **Configurable `VALID_DIRS`** via `OBSIDIAN_VALID_DIRS`, `OBSIDIAN_CONFIG`, or `{vault}/obsidian-mcp.json`.
+- **`serde_yaml` frontmatter** — parse/generate YAML metadata in `note/frontmatter.rs`.
+- **`obsidian.semantic_search`** — local weighted search (title/tags/aliases/body); detail-only in help.
+- **`CloudVault`** — local cache + best-effort HTTP sync (`OBSIDIAN_CLOUD_URL`, `OBSIDIAN_CLOUD_TOKEN`).
+- **`docs/STRUCTURE.md`** and `docs/obsidian-mcp.example.json`.
+
+### Changed
+
+- Reorganized source tree: `config/`, `validation/`, `vault/`, `note/`, `mcp/` (see `docs/STRUCTURE.md`).
+- `VaultBackend` trait now covers async read/write/delete; `write-note-tips.md` moved to `docs/`.
+- `ObsidianService` injects `AppConfig` + `Validator` instead of static constants.
+
 ## [0.3.0] - 2026-05-22
 
 ### Breaking

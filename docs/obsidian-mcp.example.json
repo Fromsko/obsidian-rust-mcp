@@ -1,0 +1,10 @@
+{
+  "vault_root": ".",
+  "valid_dirs": ["tech", "ai", "projects", "methods", "career", "ideas", "cheatsheet", "journal"],
+  "valid_statuses": ["active", "archived", "draft"],
+  "backend": "local",
+  "cloud": {
+    "url": "https://vault.example.com",
+    "token": null
+  }
+}

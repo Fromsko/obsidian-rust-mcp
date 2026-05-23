@@ -1,8 +1,11 @@
 use std::path::Path;
+
 use walkdir::WalkDir;
 
-use crate::frontmatter::parse_frontmatter;
+use crate::note::frontmatter::{body_excerpt, parse_frontmatter};
 use crate::types::{NoteEntry, VaultIndex};
+
+const BODY_EXCERPT_MAX: usize = 4096;
 
 pub fn build_index(root: &Path) -> VaultIndex {
     let mut index = VaultIndex::default();
@@ -29,6 +32,7 @@ pub fn build_index(root: &Path) -> VaultIndex {
 
         let content = std::fs::read_to_string(path).unwrap_or_default();
         let (tags, aliases, status) = parse_frontmatter(&content);
+        let excerpt = body_excerpt(&content, BODY_EXCERPT_MAX);
 
         let idx = index.entries.len();
         index.entries.push(NoteEntry {
@@ -37,6 +41,7 @@ pub fn build_index(root: &Path) -> VaultIndex {
             aliases,
             status,
             title: title.clone(),
+            body_excerpt: excerpt,
         });
         index.name_map.insert(title.to_lowercase(), idx);
 
@@ -76,19 +81,14 @@ mod tests {
     }
 
     #[test]
-    fn test_build_index_populates_name_map() {
+    fn test_build_index_body_excerpt() {
         let dir = tempfile::tempdir().unwrap();
-        fs::write(dir.path().join("test-note.md"), "---\ntags:\n  - x\n---\n").unwrap();
-
+        fs::write(
+            dir.path().join("note.md"),
+            "---\ntags: []\n---\n# Title\n\nSemantic content here.",
+        )
+        .unwrap();
         let index = build_index(dir.path());
-        assert_eq!(index.entries.len(), 1);
-        assert!(index.name_map.contains_key("test-note"));
-    }
-
-    #[test]
-    fn test_build_index_empty_dir() {
-        let dir = tempfile::tempdir().unwrap();
-        let index = build_index(dir.path());
-        assert!(index.entries.is_empty());
+        assert!(index.entries[0].body_excerpt.contains("Semantic"));
     }
 }

@@ -100,4 +100,20 @@ mod tests {
         assert!(text.contains("obsidian.guide"));
         assert!(text.contains("obsidian.index"));
     }
+
+    #[test]
+    fn default_help_hides_semantic_search() {
+        let text = render_help(&HelpParams::default());
+        assert!(!text.contains("obsidian.semantic_search"));
+    }
+
+    #[test]
+    fn topic_detail_shows_semantic_search() {
+        let text = render_help(&HelpParams {
+            topic: Some("obsidian.semantic_search".into()),
+            detail: true,
+        });
+        assert!(text.contains("obsidian.semantic_search"));
+        assert!(text.contains("query"));
+    }
 }

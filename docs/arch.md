@@ -1,17 +1,17 @@
-# Obsidian MCP — Architecture (v0.3)
+# Obsidian MCP — Architecture (v0.4)
 
 ## Goals
 
 - **MCP surface**: only `help` and `executeCommand` (minimal tool schema → save client tokens).
 - **CLI mental model**: discover via `help`, run via `executeCommand` with `obsidian.*` commands.
-- **Independent server**: not a company-wide gateway; future cloud/DB backends behind `VaultBackend`.
+- **Independent server**: not a company-wide gateway; cloud backends behind `vault::VaultBackend`.
 - **Primary user path**: `guide` → `search` → (`read`) → `write`.
 
 ## Layers
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  MCP (rmcp 0.16)                                        │
+│  mcp/ (rmcp 0.16)                                       │
 │  help │ executeCommand                                  │
 └───────────────────────────┬─────────────────────────────┘
                             │
@@ -24,56 +24,49 @@
                             │
 ┌───────────────────────────▼─────────────────────────────┐
 │  service/ObsidianService                                │
-│  guide │ search │ write │ read │ index │ delete         │
-└───────────────────────────┬─────────────────────────────┘
-                            │
-┌───────────────────────────▼─────────────────────────────┐
-│  store/LocalVault — VaultBackend + filesystem ops       │
-│  index │ frontmatter │ validation │ file_tree           │
+│  guide │ search │ semantic_search │ write │ read │ …    │
+└───────────────┬─────────────────────────┬───────────────┘
+                │                         │
+┌───────────────▼────────────┐  ┌─────────▼───────────────┐
+│  vault/                    │  │  note/                  │
+│  LocalVault │ CloudVault   │  │  frontmatter │ index    │
+│  (VaultBackend trait)      │  │  semantic │ file_tree   │
+└───────────────┬────────────┘  └─────────┬───────────────┘
+                │                         │
+┌───────────────▼─────────────────────────▼───────────────┐
+│  config/AppConfig + validation/Validator                │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ## Commands (`obsidian.*`)
 
-| Command | Tier | Maps from (v0.2) |
-|---------|------|------------------|
-| `obsidian.guide` | primary | `write_note_tips` |
-| `obsidian.search` | primary | `query_note` (+ optional `include_index`) |
-| `obsidian.write` | primary | `write_note` |
-| `obsidian.read` | advanced | `read_note` |
-| `obsidian.index` | advanced | `note_index_tree` |
-| `obsidian.delete` | detail-only | `delete_note` |
+| Command | Tier | Notes |
+|---------|------|-------|
+| `obsidian.guide` | primary | Write conventions |
+| `obsidian.search` | primary | tags / keyword / exact_name |
+| `obsidian.write` | primary | create / append |
+| `obsidian.read` | advanced | full note body |
+| `obsidian.index` | advanced | file tree + tag stats |
+| `obsidian.delete` | detail-only | irreversible |
+| `obsidian.semantic_search` | detail-only | weighted local search |
 
-## MCP tool contracts
+## Configuration
 
-### `help`
+See `docs/STRUCTURE.md` and `docs/obsidian-mcp.example.json`.
 
-```json
-{ "topic": "obsidian.write", "detail": false }
-```
+Priority: **env > JSON file > defaults**.
 
-- No `topic`: short catalog (primary + hint for advanced/detail).
-- `topic`: filter by exact name or prefix (`obsidian.`).
-- `detail: true`: parameters, examples, related commands.
+Key env vars: `OBSIDIAN_VAULT_ROOT`, `OBSIDIAN_VALID_DIRS`, `OBSIDIAN_VAULT_BACKEND`, `OBSIDIAN_CLOUD_URL`.
 
-### `executeCommand`
+## Storage
 
-```json
-{
-  "command": "obsidian.search",
-  "args": { "tags": ["docker"], "keyword": null, "include_index": false }
-}
-```
-
-Server deserializes `args` per command and returns text `CallToolResult`.
-
-## Storage evolution
-
-- **v0.3**: `LocalVault` — `OBSIDIAN_VAULT_ROOT` + walkdir index.
-- **Future**: `CloudVault` implements `VaultBackend` (list/read/write by id or URI); MCP unchanged.
+- **Local** (default): filesystem under `OBSIDIAN_VAULT_ROOT`.
+- **Cloud**: `CloudVault` writes locally first, then syncs via `PUT/DELETE {base}/v1/notes/{path}`.
 
 ## Testing
 
-- Unit: `command::help`, `command::dispatch` validation, `service` with temp dirs.
-- Integration: `tests/service_integration.rs` — full guide/search/write/read without MCP.
-- MCP: `tests/mcp_stdio.rs` — child process, `list_tools` == 2, `executeCommand` round-trip.
+- Unit: `config`, `validation`, `note/*`, `command/*`, `vault/cloud`.
+- Integration: `tests/service_integration.rs` — full command flows on temp vault.
+- MCP: `tests/mcp_stdio.rs` — child process, `list_tools` == 2.
+
+See also: [STRUCTURE.md](./STRUCTURE.md)

@@ -3,7 +3,7 @@
 project: Obsidian Rust MCP
 description: High-performance MCP server for Obsidian knowledge base management
 language: Rust
-version: 0.3.0
+version: 0.4.0
 author: Fromsko
 email: fromsko@example.com
 license: MIT
@@ -160,9 +160,23 @@ Replace `/path/to/obsidian-mcp` with the actual path to your compiled binary, an
 
 **Note**: This is the recommended approach when using this MCP server with clients like Claude Desktop, Cursor, or other MCP-compatible tools.
 
+## Configuration
+
+| Variable | Description |
+|----------|-------------|
+| `OBSIDIAN_VAULT_ROOT` | Vault root directory (default `.`) |
+| `OBSIDIAN_CONFIG` | Path to JSON config file |
+| `OBSIDIAN_VALID_DIRS` | Comma-separated top-level directory whitelist |
+| `OBSIDIAN_VAULT_BACKEND` | `local` or `cloud` |
+| `OBSIDIAN_CLOUD_URL` | Cloud API base URL (sync on write/delete) |
+
+See `docs/obsidian-mcp.example.json` and `docs/STRUCTURE.md`.
+
 ## Valid Directories
 
-Notes can be organized in the following top-level directories (subdirectories supported, max 3 levels):
+Default top-level directories (override via config):
+
+Notes can be organized in the following top-level directories (nested subdirectories supported at any depth):
 - `tech` - Technical notes
 - `ai` - AI/ML related notes
 - `projects` - Project documentation
@@ -174,26 +188,21 @@ Notes can be organized in the following top-level directories (subdirectories su
 
 ## Project Structure
 
+See [docs/STRUCTURE.md](docs/STRUCTURE.md) for the full layout. Summary:
+
 ```
 src/
-  main.rs           # Binary entry
-  lib.rs
-  server.rs         # MCP: help + executeCommand
-  command/          # Registry, help renderer, dispatch
-  service/          # Vault operations
-  store/            # LocalVault + VaultBackend trait
-  config.rs
-  types.rs
-  validation.rs
-  frontmatter.rs
-  index.rs
-  file_tree.rs
+  config/       # AppConfig (env + JSON)
+  validation/   # Path/directory rules
+  vault/        # LocalVault + CloudVault
+  note/         # frontmatter, index, semantic search
+  service/      # ObsidianService
+  command/      # registry, help, dispatch
+  mcp/          # MCP: help + executeCommand
+docs/
+  arch.md, STRUCTURE.md, write-note-tips.md
 tests/
-  service_integration.rs
-  mcp_stdio.rs
-  registry.rs
-docs/arch.md
-docs/todo.md
+  service_integration.rs, mcp_stdio.rs, registry.rs
 ```
 
 ## Testing

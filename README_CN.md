@@ -3,7 +3,7 @@
 project: Obsidian Rust MCP
 description: 基于 Rust 构建的高性能 Obsidian 知识库 MCP 服务器
 language: Rust
-version: 0.3.0
+version: 0.4.0
 author: Fromsko
 email: fromsko@example.com
 license: MIT
@@ -162,9 +162,23 @@ pub const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 
 **注意**：当与 Claude Desktop、Cursor 或其他 MCP 兼容工具一起使用时，这是推荐的方法。
 
+## 配置
+
+| 变量 | 说明 |
+|------|------|
+| `OBSIDIAN_VAULT_ROOT` | 知识库根目录（默认 `.`） |
+| `OBSIDIAN_CONFIG` | JSON 配置文件路径 |
+| `OBSIDIAN_VALID_DIRS` | 逗号分隔的顶级目录白名单 |
+| `OBSIDIAN_VAULT_BACKEND` | `local` 或 `cloud` |
+| `OBSIDIAN_CLOUD_URL` | 云端 API 基址（写/删时同步） |
+
+详见 `docs/obsidian-mcp.example.json` 与 `docs/STRUCTURE.md`。
+
 ## 有效目录
 
-笔记可以组织在以下顶级目录中（支持子目录，最多 3 层）：
+默认顶级目录（可通过配置覆盖）：
+
+笔记可以组织在以下顶级目录中（支持任意深度的子目录嵌套）：
 - `tech` - 技术笔记
 - `ai` - AI/机器学习相关笔记
 - `projects` - 项目文档
@@ -176,26 +190,21 @@ pub const VAULT_ROOT: &str = r"D:\notes\Fromsko";
 
 ## 项目结构
 
+完整说明见 [docs/STRUCTURE.md](docs/STRUCTURE.md)。概要：
+
 ```
 src/
-  main.rs           # 二进制入口
-  lib.rs
-  server.rs         # MCP：help + executeCommand
-  command/          # 注册表、help 渲染、分发
-  service/          # 知识库业务逻辑
-  store/            # LocalVault + VaultBackend（预留云端）
-  config.rs
-  types.rs
-  validation.rs
-  frontmatter.rs
-  index.rs
-  file_tree.rs
+  config/       # AppConfig（env + JSON）
+  validation/   # 路径/目录校验
+  vault/        # LocalVault + CloudVault
+  note/         # frontmatter、索引、语义搜索
+  service/      # ObsidianService
+  command/      # registry、help、dispatch
+  mcp/          # MCP：help + executeCommand
+docs/
+  arch.md, STRUCTURE.md, write-note-tips.md
 tests/
-  service_integration.rs
-  mcp_stdio.rs
-  registry.rs
-docs/arch.md
-docs/todo.md
+  service_integration.rs, mcp_stdio.rs, registry.rs
 ```
 
 ## 测试

@@ -2,14 +2,12 @@
 
 pub mod command;
 pub mod config;
-pub mod file_tree;
-pub mod frontmatter;
-pub mod index;
-pub mod server;
+pub mod mcp;
+pub mod note;
 pub mod service;
-pub mod store;
 pub mod types;
 pub mod validation;
+pub mod vault;
 
-pub use server::ObsidianMcp;
+pub use mcp::ObsidianMcp;
 pub use service::ObsidianService;

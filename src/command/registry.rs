@@ -62,6 +62,13 @@ pub const COMMANDS: &[CommandMeta] = &[
         detail: "参数: path。谨慎使用。",
         example_args: r#"{ "path": "tech/old-note.md" }"#,
     },
+    CommandMeta {
+        name: "obsidian.semantic_search",
+        summary: "语义加权搜索（标题/标签/别名/正文）",
+        tier: CommandTier::DetailOnly,
+        detail: "参数: query (string), limit? (1–50, default 10). 本地加权检索，无需外部模型。",
+        example_args: r#"{ "query": "docker nginx 反向代理", "limit": 5 }"#,
+    },
 ];
 
 pub fn find_command(name: &str) -> Option<&'static CommandMeta> {

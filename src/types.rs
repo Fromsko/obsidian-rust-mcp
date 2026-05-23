@@ -21,6 +21,8 @@ pub struct NoteEntry {
     pub aliases: Vec<String>,
     pub status: String,
     pub title: String,
+    /// Body text excerpt for semantic search (after frontmatter).
+    pub body_excerpt: String,
 }
 
 #[derive(Debug, Default)]
@@ -86,4 +88,14 @@ pub struct WriteNoteParams {
 #[schemars(title = "PathParams")]
 pub struct PathParams {
     pub path: String,
+}
+
+/// `obsidian.semantic_search` arguments (detail-only command).
+#[derive(Debug, Deserialize, JsonSchema)]
+#[schemars(title = "SemanticSearchParams")]
+pub struct SemanticSearchParams {
+    #[schemars(description = "Natural language or keyword query")]
+    pub query: String,
+    #[schemars(description = "Max results (1–50, default 10)")]
+    pub limit: Option<usize>,
 }
