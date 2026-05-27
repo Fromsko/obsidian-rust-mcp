@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1] - 2026-05-27
+
+### Fixed
+
+- **Mocode MCP 客户端兼容性** — `executeCommand` 的 `args` 参数现在兼容 JSON 字符串格式，解决 Mocode 等客户端将参数序列化为字符串而非 JSON 对象的问题。
+- 自动检测并解析字符串格式的 JSON 参数，无需客户端修改。
+
 ## [0.4.0] - 2026-05-22
 
 ### Added

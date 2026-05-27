@@ -82,6 +82,9 @@ fn parse_args<T: serde::de::DeserializeOwned>(
 ) -> Result<T, DispatchError> {
     let args = if args.is_null() {
         serde_json::json!({})
+    } else if let Some(s) = args.as_str() {
+        // 兼容 Mocode 等客户端：args 可能是 JSON 字符串而非对象
+        serde_json::from_str(s).unwrap_or(serde_json::json!({}))
     } else {
         args
     };
